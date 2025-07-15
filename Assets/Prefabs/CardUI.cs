@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using TMPro; // ¦p»ÝTextMeshPro¡A­Y¤£¥Î«h§ï¦^UnityEngine.UI.Text
+using TMPro; // ï¿½pï¿½ï¿½TextMeshProï¿½Aï¿½Yï¿½ï¿½ï¿½Î«hï¿½ï¿½^UnityEngine.UI.Text
 
 public class CardUI: MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [Header("UI °Ñ¦Ò")]
+    [Header("UI ï¿½Ñ¦ï¿½")]
     public Text cardNameText;
     public Text costText;
     public Text descriptionText;
     public Image cardImage;
     public Image cardBackground;
 
-    [Header("¤º³¡°Ñ¼Æ")]
-    public CardBase cardData; // ³o±i¥d©Ò¹ïÀ³ªº ScriptableObject
+    [Header("ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¼ï¿½")]
+    public CardBase cardData; // ï¿½oï¿½iï¿½dï¿½Ò¹ï¿½ï¿½ï¿½ï¿½ï¿½ ScriptableObject
     public Transform originalParent;
-    private Canvas canvas;     // ¬°¤F¥¿½T©ì¦²(¨ó§U­pºâ¹«¼Ð¦ì¸m)
+    private Canvas canvas;     // ï¿½ï¿½ï¿½Fï¿½ï¿½ï¿½Tï¿½ì¦²(ï¿½ï¿½Uï¿½pï¿½â¹«ï¿½Ð¦ï¿½m)
     private RectTransform rectTransform;
 
     private void Awake()
@@ -27,7 +27,7 @@ public class CardUI: MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     }
 
     /// <summary>
-    /// ³]©w¥»¥dµPªºÅã¥Ü
+    /// ï¿½]ï¿½wï¿½ï¿½ï¿½dï¿½Pï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void SetupCard(CardBase data)
     {
@@ -37,7 +37,7 @@ public class CardUI: MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         if (descriptionText) descriptionText.text = data.description;
         if (cardImage && data.cardImage) cardImage.sprite = data.cardImage;
 
-        // ¤]¥i®Ú¾Ú cardType ¨Ó¤Á´«­I´ºÃC¦â
+        // ï¿½]ï¿½iï¿½Ú¾ï¿½ cardType ï¿½Ó¤ï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½ï¿½Cï¿½ï¿½
         switch (data.cardType)
         {
             case CardType.Attack:
@@ -55,103 +55,110 @@ public class CardUI: MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
         }
     }
 
-    #region ©ì¦²¨Æ¥ó
+    #region ï¿½ì¦²ï¿½Æ¥ï¿½
     public void OnBeginDrag(PointerEventData eventData)
     {
         originalParent = transform.parent;
         transform.SetParent(FindObjectOfType<Canvas>().transform);
-        // Åý©ì¦²®É¤£·|³Q¤÷ª«¥óªºLayout¼vÅT
+         BattleManager bm = FindObjectOfType<BattleManager>();
+        if (bm != null)
+        {
+            if (cardData.cardType == CardType.Attack)
+            {
+                bm.StartAttackSelect(cardData);
+            }
+            else if (cardData.cardType == CardType.Movement)
+            {
+                bm.UseMovementCard(cardData);
+            }
+        }
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        // Åý¥dµP¸òµÛ¹«¼Ð²¾°Ê
+        
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        BattleManager bm = FindObjectOfType<BattleManager>();
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(eventData.position);
         RaycastHit2D hit = Physics2D.Raycast(worldPos, Vector2.zero);
-
-        // ¥[¤@±ø Debug.Log¡A¦L¥X¬O§_¦¨¥\¥´¨ì
-        Debug.Log($"[OnEndDrag] Raycast from {worldPos}, hit = {hit.collider?.name}");
-
-        // 2. ®Ú¾Ú¥dµPÃþ«¬°µ¤£¦PÅÞ¿è
-        switch (cardData.cardType)
+        bool used = false;
+        if (bm != null)
         {
-            case CardType.Attack:
-                
-                    // ¥ý¨ú±o BattleManager
-                    BattleManager bm = FindObjectOfType<BattleManager>();
-
-                    // §PÂ_¬O§_¬°¡u«æ«æ¦p«ß¥O¡v
-                    if (cardData.cardName == "«æ«æ¦p«ß¥O")
+            if (cardData.cardType == CardType.Attack)
+            {
+                if (hit.collider != null)
+                {
+                    Enemy e = hit.collider.GetComponent<Enemy>();
+                    if (e != null)
                     {
-                        // ¥u­n¤£¬O HandPanel ´NÄ²µo¤E®c®æ¿ï¨ú
-                        bm.StartAttackSelect(cardData);
-                        Destroy(gameObject);          // ²¾°£¥d¤ù UI
+                        bm.OnEnemyClicked(e);
+                        used = true;
                     }
-                    if (cardData.cardName == "¤õ")
+                }
+                if (!used)
+                {
+                    bm.EndAttackSelect();
+                }
+            }
+            else if (cardData.cardType == CardType.Movement)
+            {
+                if (hit.collider != null)
+                {
+                    BoardTile tile = hit.collider.GetComponent<BoardTile>();
+                    if (tile != null)
                     {
-                        // ¥u­n¤£¬O HandPanel ´NÄ²µo¤E®c®æ¿ï¨ú
-                        bm.StartAttackSelect(cardData);
-                        Destroy(gameObject);          // ²¾°£¥d¤ù UI
+                        bm.OnTileClicked(tile);
+                        used = true;
                     }
-                    if (cardData.cardName == "¤ì")
-                    {
-                        // ¥u­n¤£¬O HandPanel ´NÄ²µo¤E®c®æ¿ï¨ú
-                        bm.StartAttackSelect(cardData);
-                        Destroy(gameObject);          // ²¾°£¥d¤ù UI
-                    }
-                    if (cardData.cardName == "¤ô")
-                    {
-                        // ¥u­n¤£¬O HandPanel ´NÄ²µo¤E®c®æ¿ï¨ú
-                        bm.StartAttackSelect(cardData);
-                        Destroy(gameObject);          // ²¾°£¥d¤ù UI
-                     }
-                     break;
-                
-
-            case CardType.Movement:
-                HandleMovementCard(eventData);
-                break;
-
-            // ¨ä¥LÃþ«¬(e.g. Skill, Relic)¤]¥i¨Ì»Ý¨D©µ¦ù
-            default:
-                // ¨ä¥LÃþ«¬¼È®É¤£°µ¡A¦^¤âµP
-                ReturnToHand();
-                break;
+                }
+                if (!used)
+                {
+                    bm.CancelMovementSelection();
+                }
+            }
+        }
+        if (used)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            ReturnToHand();
         }
     }
 
-    // §ðÀ»µP¡G¥u¦³¼²¨ì Enemy ®É¤~Ä²µo§ðÀ»¨Ã®ø¥¢¡A§_«h°h¦^¤âµP
+
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Pï¿½Gï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Enemy ï¿½É¤~Ä²ï¿½oï¿½ï¿½ï¿½ï¿½ï¿½Ã®ï¿½ï¿½ï¿½ï¿½Aï¿½_ï¿½hï¿½hï¿½^ï¿½ï¿½P
 
     #endregion
 
-    // ²¾°ÊµP¡G¥u­n¨S©ñ¦^¤âµP¡A´NÄ²µo²¾°Ê®ÄªG¨Ã®ø¥¢
-    // ­Y§P©w¼²¨ìHandPanel, ´N¦^¤âµP
+    // ï¿½ï¿½ï¿½ÊµPï¿½Gï¿½uï¿½nï¿½Sï¿½ï¿½^ï¿½ï¿½Pï¿½Aï¿½NÄ²ï¿½oï¿½ï¿½ï¿½Ê®ÄªGï¿½Ã®ï¿½ï¿½ï¿½
+    // ï¿½Yï¿½Pï¿½wï¿½ï¿½ï¿½ï¿½HandPanel, ï¿½Nï¿½^ï¿½ï¿½P
     private void HandleMovementCard(PointerEventData eventData)
     {
         RaycastHit2D hit2D = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(eventData.position), Vector2.zero);
-        // ÀË¬d¬O§_À»¤¤ HandPanel¡]¥i¥Î Tag / ¦WºÙ / µ²ºc¨ÓÃÑ§O¡^
+        // ï¿½Ë¬dï¿½Oï¿½_ï¿½ï¿½ï¿½ï¿½ HandPanelï¿½]ï¿½iï¿½ï¿½ Tag / ï¿½Wï¿½ï¿½ / ï¿½ï¿½ï¿½cï¿½ï¿½ï¿½Ñ§Oï¿½^
         if (hit2D.collider != null)
         {
             HandPanelMarker handPanel = hit2D.collider.GetComponent<HandPanelMarker>();
 
             if (handPanel != null)
             {
-                // ªí¥Ü¥á¨ì HandPanel => ¦^¤âµP
+                // ï¿½ï¿½ï¿½Ü¥ï¿½ï¿½ HandPanel => ï¿½^ï¿½ï¿½P
                 ReturnToHand();
                 return;
             }
         }
 
-        // ¦pªG¤£¬O HandPanel => Ä²µo²¾°ÊµP
+        // ï¿½pï¿½Gï¿½ï¿½ï¿½O HandPanel => Ä²ï¿½oï¿½ï¿½ï¿½ÊµP
         BattleManager bm = FindObjectOfType<BattleManager>();
-        bm.UseMovementCard(cardData); // ¶i¤J«áÄòªº¿ï¾ÜTile¬yµ{
+        bm.UseMovementCard(cardData); // ï¿½iï¿½Jï¿½ï¿½ï¿½òªº¿ï¿½ï¿½Tileï¿½yï¿½{
 
-        // ¾P·´UIª«¥ó(Á×§K¥d¯d¦b¤âµP)
+        // ï¿½Pï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½(ï¿½×§Kï¿½dï¿½dï¿½bï¿½ï¿½P)
         Destroy(gameObject);
 
     }
@@ -164,44 +171,44 @@ public class CardUI: MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHan
     }
 
     /// <summary>
-    /// ÀË¬d¥dµP©ì¦²µ²§ô®Éªº¸¨ÂI
+    /// ï¿½Ë¬dï¿½dï¿½Pï¿½ì¦²ï¿½ï¿½ï¿½ï¿½ï¿½Éªï¿½ï¿½ï¿½ï¿½I
     /// </summary>
     private void CheckDropTarget(PointerEventData eventData)
     {
-        // ¹ïUIª«¥ó°µGraphicRaycast or Physics Raycast (2D)
-        // ³o¸ÌÂ²¤Æ: 
-        //   - ­Yª±®a©ì¨ì Enemy UI ¤W => §ðÀ»
-        //   - ­Y©ì¨ì Board Tile => ²¾°Ê
-        //   - §_«h¦^¨ì¤âµP
+        // ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½GraphicRaycast or Physics Raycast (2D)
+        // ï¿½oï¿½ï¿½Â²ï¿½ï¿½: 
+        //   - ï¿½Yï¿½ï¿½ï¿½aï¿½ï¿½ï¿½ Enemy UI ï¿½W => ï¿½ï¿½ï¿½ï¿½
+        //   - ï¿½Yï¿½ï¿½ï¿½ Board Tile => ï¿½ï¿½ï¿½ï¿½
+        //   - ï¿½_ï¿½hï¿½^ï¿½ï¿½ï¿½P
         RaycastHit2D hit2D = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(eventData.position), Vector2.zero);
         if (hit2D.collider != null)
         {
-            // ÀË¬d¬O§_¬O Enemy
+            // ï¿½Ë¬dï¿½Oï¿½_ï¿½O Enemy
             Enemy e = hit2D.collider.GetComponent<Enemy>();
             if (e != null)
             {
-                // §ðÀ» or §Þ¯à¹ï¼Ä¤H
+                // ï¿½ï¿½ï¿½ï¿½ or ï¿½Þ¯ï¿½ï¿½Ä¤H
                 UseCardOnEnemy(e);
                 return;
             }
         }
 
-        // ­Y¤W­±³£¨S¤Ç°t => ¦^¤âµP
+        // ï¿½Yï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Sï¿½Ç°t => ï¿½^ï¿½ï¿½P
         transform.SetParent(originalParent);
         rectTransform.anchoredPosition = Vector2.zero;
     }
 
     /// <summary>
-    /// ¹ï¼Ä¤H¨Ï¥Î¦¹¥d
+    /// ï¿½ï¿½Ä¤Hï¿½Ï¥Î¦ï¿½ï¿½d
     /// </summary>
     private void UseCardOnEnemy(Enemy enemyTarget)
     {
-        // ¦V BattleManager µo°e "PlayCard" 
+        // ï¿½V BattleManager ï¿½oï¿½e "PlayCard" 
         BattleManager bm = FindObjectOfType<BattleManager>();
         if (bm != null)
         {
             bm.PlayCard(cardData);
         }
-        // ¥d¥i¯à·|³Q²¾¨ì±óµP°ï, UI°µ¬ÛÀ³§ó·s
+        // ï¿½dï¿½iï¿½ï¿½|ï¿½Qï¿½ï¿½ï¿½ï¿½ï¿½Pï¿½ï¿½, UIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½s
     }
 }

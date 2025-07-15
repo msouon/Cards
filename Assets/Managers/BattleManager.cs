@@ -8,17 +8,17 @@ public class BattleManager : MonoBehaviour
 {
     public Player player;
     public Enemy enemy;
-    public GameObject cardPrefab;    // ±qInspector©ì¤J
+    public GameObject cardPrefab;    // ï¿½qInspectorï¿½ï¿½J
 
     private enum TurnState { PlayerTurn, EnemyTurn, Victory, Defeat }
     private TurnState currentState;
-    public Transform handPanel;      // Inspector¸Ì«ü©w HandPanel
-    public Transform deckPile;       // Åã¥Ü©âµP°ï
-    public Transform discardPile;    // Åã¥Ü±óµP°ï
-    public Board board; // ¦bInspector «ü¦V§AªºBoardª«¥ó
-    // 1) ¬ö¿ý¬O§_¥¿¦b¿ï¾Ü²¾°ÊTile
+    public Transform handPanel;      // Inspectorï¿½Ì«ï¿½ï¿½w HandPanel
+    public Transform deckPile;       // ï¿½ï¿½Ü©ï¿½Pï¿½ï¿½
+    public Transform discardPile;    // ï¿½ï¿½Ü±ï¿½Pï¿½ï¿½
+    public Board board; // ï¿½bInspector ï¿½ï¿½ï¿½Vï¿½Aï¿½ï¿½Boardï¿½ï¿½ï¿½ï¿½
+    // 1) ï¿½ï¿½ï¿½ï¿½ï¿½Oï¿½_ï¿½ï¿½ï¿½bï¿½ï¿½Ü²ï¿½ï¿½ï¿½Tile
     private bool isSelectingMovementTile = false;
-    // 2) ¼È¦sª±®a¥¿¦b¨Ï¥Îªº²¾°Ê¥d
+    // 2) ï¿½È¦sï¿½ï¿½ï¿½aï¿½ï¿½ï¿½bï¿½Ï¥Îªï¿½ï¿½ï¿½ï¿½Ê¥d
     private CardBase currentMovementCard = null;
     private bool isSelectingAttackTarget = false;
     private CardBase currentAttackCard = null;
@@ -26,8 +26,8 @@ public class BattleManager : MonoBehaviour
     
     void Start()
     {
-        StartPlayerTurn(); // ½T«O©âµPÅÞ¿è¶°¤¤ºÞ²z
-        // °²³]³õ¤W¤@¶}©l´N¦³ player, enemy
+        StartPlayerTurn(); // ï¿½Tï¿½Oï¿½ï¿½Pï¿½Þ¿è¶°ï¿½ï¿½ï¿½Þ²z
+        // ï¿½ï¿½ï¿½]ï¿½ï¿½ï¿½Wï¿½@ï¿½}ï¿½lï¿½Nï¿½ï¿½ player, enemy
         currentState = TurnState.PlayerTurn;
         if (enemy != null) enemy.ProcessTurnStart();
         
@@ -37,34 +37,34 @@ public class BattleManager : MonoBehaviour
     {
         if (currentState == TurnState.PlayerTurn)
         {
-            // ­Yª±®a«ö¤Uµ²§ô¦^¦X => EndPlayerTurn();
+            // ï¿½Yï¿½ï¿½ï¿½aï¿½ï¿½ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½^ï¿½X => EndPlayerTurn();
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 EndPlayerTurn();
             }
         }
 
-        // ³Ó±Ñ§PÂ_
+        // ï¿½Ó±Ñ§Pï¿½_
         if (enemy != null && enemy.currentHP <= 0 && currentState != TurnState.Victory)
         {
             currentState = TurnState.Victory;
-            Debug.Log("³Ó§Q¡I");
+            Debug.Log("ï¿½Ó§Qï¿½I");
         }
         if (player.currentHP <= 0 && currentState != TurnState.Defeat)
         {
             currentState = TurnState.Defeat;
-            Debug.Log("¥¢±Ñ...");
+            Debug.Log("ï¿½ï¿½ï¿½ï¿½...");
         }
     }
 
     public void EndPlayerTurn()
     {
-        // 1) ¥á±ó©Ò¦³¤âµP
+        // 1) ï¿½ï¿½ï¿½Ò¦ï¿½ï¿½ï¿½P
         DiscardAllHand();
 
         if (currentState == TurnState.PlayerTurn)
         {
-            // µ²§ôª±®a¦^¦X
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½aï¿½^ï¿½X
             player.EndTurn();
             StartCoroutine(EnemyTurn());
         }
@@ -78,17 +78,17 @@ public class BattleManager : MonoBehaviour
         if (drawCount < 0) drawCount = 0;
         player.buffs.nextTurnDrawChange = 0;
         player.DrawNewHand(drawCount);
-        // §ó·sUI
+        // ï¿½ï¿½sUI
         RefreshHandUI();
     }
 
 
     private void DiscardAllHand()
     {
-        // §â¥þ³¡¤âµP²¾¨ì±óµP°ï
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Pï¿½ï¿½ï¿½ï¿½ï¿½Pï¿½ï¿½
         player.discardPile.AddRange(player.hand);
         player.hand.Clear();
-        // UI¤@¨Ö§ó·s(¤âµP¬OªÅªº)
+        // UIï¿½@ï¿½Ö§ï¿½s(ï¿½ï¿½Pï¿½Oï¿½Åªï¿½)
         RefreshHandUI();
     }
 
@@ -96,41 +96,41 @@ public class BattleManager : MonoBehaviour
     {
         currentState = TurnState.EnemyTurn;
         if (enemy != null) enemy.ProcessTurnStart();
-        // ¼ÒÀÀ¼Ä¤H«ä¦Ò1¬í
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¤Hï¿½ï¿½ï¿½1ï¿½ï¿½
         yield return new WaitForSeconds(1f);
 
         if (enemy != null) enemy.EnemyAction(player);
 
         yield return new WaitForSeconds(1f);
-        // ¦^¦Xµ²§ô, reset block or do nothing (Slay the Spire -> blockÂk0)
-        // ³o¸Ì¥Ü½d:
+        // ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½, reset block or do nothing (Slay the Spire -> blockï¿½k0)
+        // ï¿½oï¿½Ì¥Ü½d:
         player.block = 0;
         if (enemy != null) enemy.block = 0;
 
-        // ¤Á¦^ª±®a¦^¦X
+        // ï¿½ï¿½ï¿½^ï¿½ï¿½ï¿½aï¿½^ï¿½X
         currentState = TurnState.PlayerTurn;
         StartPlayerTurn();
-        Debug.Log("ª±®a¦^¦X¶}©l");
+        Debug.Log("ï¿½ï¿½ï¿½aï¿½^ï¿½Xï¿½}ï¿½l");
     }
 
     /// <summary>
-    /// UI/«ö¶sÂIÀ»: ¥´¥X¥dµP
+    /// UI/ï¿½ï¿½ï¿½sï¿½Iï¿½ï¿½: ï¿½ï¿½ï¿½Xï¿½dï¿½P
     /// </summary>
     public void PlayCard(CardBase cardData)
     {
         if (currentState != TurnState.PlayerTurn) return;
 
-        // ÀË¬d¯à¶q & Ãþ«¬
+        // ï¿½Ë¬dï¿½ï¿½q & ï¿½ï¿½ï¿½ï¿½
         int finalCost = cardData.cost;
 
-        // ­Y¬O§ðÀ»¥d, ÀË¬d player.buffs.nextAttackCostModify
+        // ï¿½Yï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½d, ï¿½Ë¬d player.buffs.nextAttackCostModify
         if (cardData.cardType == CardType.Attack && player.buffs.nextAttackCostModify != 0)
         {
             finalCost += player.buffs.nextAttackCostModify;
             if (finalCost < 0) finalCost = 0;
         }
 
-        // ­Y¬O²¾°ÊµP, ÀË¬d player.buffs.movementCostModify
+        // ï¿½Yï¿½Oï¿½ï¿½ï¿½ÊµP, ï¿½Ë¬d player.buffs.movementCostModify
         if (cardData.cardType == CardType.Movement && player.buffs.movementCostModify != 0)
         {
             finalCost += player.buffs.movementCostModify;
@@ -139,51 +139,51 @@ public class BattleManager : MonoBehaviour
 
         if (player.energy < finalCost)
         {
-            Debug.Log("¯à¶q¤£¨¬");
+            Debug.Log("ï¿½ï¿½qï¿½ï¿½ï¿½ï¿½");
             return;
         }
 
-        // °õ¦æ®ÄªG
+        // ï¿½ï¿½ï¿½ï¿½ÄªG
         cardData.ExecuteEffect(player, enemy);
 
-        // ­Y¬O§ðÀ»¥d => ²Ö­p¥»¦^¦X§ðÀ»¦¸¼Æ
+        // ï¿½Yï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½d => ï¿½Ö­pï¿½ï¿½ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (cardData.cardType == CardType.Attack)
         {
             player.attackUsedThisTurn++;
-            // ¤U¦¸§ðÀ»+X => ¥Î¤@¦¸«á²M0
+            // ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+X => ï¿½Î¤@ï¿½ï¿½ï¿½ï¿½M0
             if (player.buffs.nextAttackPlus > 0)
             {
-                // °l¥[¶Ë®` => »Ý¤â°Ê¦A©I¥s?? 
-                // ©Î¨Æ¥ý¦b ExecuteEffect ®É¥[
-                // ³o¸Ì¥Ü½d§âlastDamage+ nextAttackPlus¦A¹ïenemy 
-                // ·|¸û½ÆÂø, ¥i¨Ì¹ê»Ú»Ý¨D
+                // ï¿½lï¿½[ï¿½Ë®` => ï¿½Ý¤ï¿½Ê¦Aï¿½Iï¿½s?? 
+                // ï¿½Î¨Æ¥ï¿½ï¿½b ExecuteEffect ï¿½É¥[
+                // ï¿½oï¿½Ì¥Ü½dï¿½ï¿½lastDamage+ nextAttackPlusï¿½Aï¿½ï¿½enemy 
+                // ï¿½|ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½iï¿½Ì¹ï¿½Ú»Ý¨D
                 player.buffs.nextAttackPlus = 0;
             }
         }
 
-        // ¥d¶i±óµP°ï
+        // ï¿½dï¿½iï¿½ï¿½Pï¿½ï¿½
         if (player.hand.Contains(cardData))
         {
             player.hand.Remove(cardData);
             player.discardPile.Add(cardData);
         }
 
-        // 4) ¦©¯à¶q / §ó·sUI
+        // 4) ï¿½ï¿½ï¿½ï¿½q / ï¿½ï¿½sUI
         player.UseEnergy(finalCost);
         RefreshHandUI();
     }
 
     public void UseMovementCard(CardBase movementCard)
     {
-        // 1) ÀË¬d¯à¶q
+        // 1) ï¿½Ë¬dï¿½ï¿½q
         if (player.energy < movementCard.cost)
         {
-            Debug.Log("¯à¶q¤£¨¬¤£¯à²¾°Ê");
+            Debug.Log("ï¿½ï¿½qï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à²¾ï¿½ï¿½");
             return;
         }
         if (isSelectingMovementTile)
         {
-            Debug.Log("¤w¦b¿ï¾Ü²¾°ÊTileª¬ºA, ½Ð¥ý§¹¦¨");
+            Debug.Log("ï¿½wï¿½bï¿½ï¿½Ü²ï¿½ï¿½ï¿½Tileï¿½ï¿½ï¿½A, ï¿½Ð¥ï¿½ï¿½ï¿½ï¿½ï¿½");
             return;
         }
 
@@ -208,7 +208,7 @@ public class BattleManager : MonoBehaviour
         HighlightTilesWithOffsets(player.position, offs);
     }
 
-    // °²³]player.position¬O( x , y ), §Ú­Ì·Q¼Ð°O¥|©P( x¡Ó1 , y ), ( x , y¡Ó1 )
+    // ï¿½ï¿½ï¿½]player.positionï¿½O( x , y ), ï¿½Ú­Ì·Qï¿½Ð°Oï¿½|ï¿½P( xï¿½ï¿½1 , y ), ( x , yï¿½ï¿½1 )
     private void HighlightTilesWithOffsets(Vector2Int centerPos, List<Vector2Int> offsets)
     {
         foreach (var off in offsets)
@@ -226,59 +226,65 @@ public class BattleManager : MonoBehaviour
     {
         board.ResetAllTilesSelectable();
     }
+    public void CancelMovementSelection()
+    {
+        isSelectingMovementTile=false;
+        currentMovementCard=null;
+        board.ResetAllTilesSelectable();
+    }
 
     public void OnTileClicked(BoardTile tile)
     {
-        // ¦pªG¥Ø«e¤£¬O¦b¿ï²¾°Êtileª¬ºA => ©¿²¤
+        // ï¿½pï¿½Gï¿½Ø«eï¿½ï¿½ï¿½Oï¿½bï¿½ï²¾ï¿½ï¿½tileï¿½ï¿½ï¿½A => ï¿½ï¿½ï¿½ï¿½
         if (!isSelectingMovementTile) return;
 
-        // 1) ¥Ñ²¾°ÊµP¨M©w¦æ°Ê
+        // 1) ï¿½Ñ²ï¿½ï¿½ÊµPï¿½Mï¿½wï¿½ï¿½ï¿½
         currentMovementCard.ExecuteOnPosition(player, tile.gridPosition);
 
-        // ¦©¯à¶q
+        // ï¿½ï¿½ï¿½ï¿½q
         int finalCost = currentMovementCard.cost + player.buffs.movementCostModify;
         if (finalCost < 0) finalCost = 0;
         player.UseEnergy(finalCost);
 
-        // 3) ±q¤âµP²¾°£ currentMovementCard => ¥á¨ì±óµP
+        // 3) ï¿½qï¿½ï¿½Pï¿½ï¿½ï¿½ï¿½ currentMovementCard => ï¿½ï¿½ï¿½ï¿½P
         if (player.hand.Contains(currentMovementCard))
         {
             player.hand.Remove(currentMovementCard);
             player.discardPile.Add(currentMovementCard);
         }
 
-        // 4) ­«¸mª¬ºA
+        // 4) ï¿½ï¿½ï¿½mï¿½ï¿½ï¿½A
         isSelectingMovementTile = false;
         currentMovementCard = null;
 
-        // 5) Ãö³¬©Ò¦³¥i¿ïTile
+        // 5) ï¿½ï¿½ï¿½ï¿½ï¿½Ò¦ï¿½ï¿½iï¿½ï¿½Tile
         board.ResetAllTilesSelectable();
 
-        // 6) ¨ê·s¤âµPUI
+        // 6) ï¿½ï¿½sï¿½ï¿½PUI
         RefreshHandUI();
     }
 
 
-    // ·íª±®a©âµP¡B¥´µP¡B¦^¦X¶}©lµ¥ª¬ºA§ïÅÜ«á¡A¥i©I¥s¦¹¤èªk§ó·s¤âµPUI
+    // ï¿½ï¿½ï¿½ï¿½ï¿½aï¿½ï¿½Pï¿½Bï¿½ï¿½ï¿½Pï¿½Bï¿½^ï¿½Xï¿½}ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½Ü«ï¿½Aï¿½iï¿½Iï¿½sï¿½ï¿½ï¿½ï¿½kï¿½ï¿½sï¿½ï¿½PUI
     public void RefreshHandUI()
     {
         if (deckPile)
         {
             Text t = deckPile.GetComponentInChildren<Text>();
-            if (t) t.text = "µP®w: " + player.deck.Count;
+            if (t) t.text = "ï¿½Pï¿½w: " + player.deck.Count;
         }
         if (discardPile)
         {
             Text t2 = discardPile.GetComponentInChildren<Text>();
-            if (t2) t2.text = "±óµP: " + player.discardPile.Count;
+            if (t2) t2.text = "ï¿½ï¿½P: " + player.discardPile.Count;
         }
-        // 1. ¥ý²M°£²{¦³ªº¤lª«¥ó(¤âµPUI)
+        // 1. ï¿½ï¿½ï¿½Mï¿½ï¿½ï¿½{ï¿½ï¿½ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½PUI)
         foreach (Transform child in handPanel)
         {
             Destroy(child.gameObject);
         }
 
-        // 2. ­«·s¥Í¦¨
+        // 2. ï¿½ï¿½ï¿½sï¿½Í¦ï¿½
         foreach (var cardData in player.hand)
         {
             GameObject cardObj = Instantiate(cardPrefab, handPanel);
@@ -291,13 +297,13 @@ public class BattleManager : MonoBehaviour
     {
         int finalCost = attackCard.cost + player.buffs.nextAttackCostModify;
         if (finalCost < 0) finalCost = 0;
-        if (player.energy < finalCost) { Debug.Log("¯à¶q¤£¨¬"); return; }
+        if (player.energy < finalCost) { Debug.Log("ï¿½ï¿½qï¿½ï¿½ï¿½ï¿½"); return; }
 
-        // ³]ª¬ºA
+        // ï¿½]ï¿½ï¿½ï¿½A
         isSelectingAttackTarget = true;
         currentAttackCard = attackCard;
 
-        // °ª«G½d³ò¤ºªº¼Ä¤H
+        // ï¿½ï¿½ï¿½Gï¿½dï¿½ò¤ºªï¿½ï¿½Ä¤H
         AttackCardBase aCard = attackCard as AttackCardBase;
         List<Vector2Int> offs = null;
         if (aCard != null && aCard.rangeOffsets != null && aCard.rangeOffsets.Count > 0)
@@ -318,28 +324,28 @@ public class BattleManager : MonoBehaviour
         HighlightEnemiesWithOffsets(player.position, offs);
     }
 
-    // ====== ÂIÀ»°»´ú¡G¥Ñ EnemyClickable.cs ©Î OnMouseDown Ä²µo ======
+    // ====== ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Gï¿½ï¿½ EnemyClickable.cs ï¿½ï¿½ OnMouseDown Ä²ï¿½o ======
     public void OnEnemyClicked(Enemy e)
     {
         if (!isSelectingAttackTarget) return;
-        if (!highlightedEnemies.Contains(e)) return;    // ¥u¤¹³\°ª«G½d³ò¤ºªº¼Ä¤H
+        if (!highlightedEnemies.Contains(e)) return;    // ï¿½uï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½Gï¿½dï¿½ò¤ºªï¿½ï¿½Ä¤H
 
-        // °õ¦æ§ðÀ»
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         currentAttackCard.ExecuteEffect(player, e);
 
-        // ¦©¯à¶q¡B¥áµP
+        // ï¿½ï¿½ï¿½ï¿½qï¿½Bï¿½ï¿½P
         player.hand.Remove(currentAttackCard);
         player.discardPile.Add(currentAttackCard);
         int finalCost = currentAttackCard.cost + player.buffs.nextAttackCostModify;
         if (finalCost < 0) finalCost = 0;
         player.UseEnergy(finalCost);
 
-        // ¦¬§À
+        // ï¿½ï¿½ï¿½ï¿½
         EndAttackSelect();
         RefreshHandUI();
     }
 
-    // ====== ¨ú®ø / µ²§ô¿ï¨ú ======
+    // ====== ï¿½ï¿½ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ======
     public void EndAttackSelect()
     {
         isSelectingAttackTarget = false;
@@ -348,31 +354,31 @@ public class BattleManager : MonoBehaviour
         highlightedEnemies.Clear();
     }
 
-    // ====== °ª«G·j´M ======
+    // ====== ï¿½ï¿½ï¿½Gï¿½jï¿½M ======
     private void HighlightEnemiesWithOffsets(Vector2Int center, List<Vector2Int> offsets)
     {
-        highlightedEnemies.Clear(); // ²M°£¤w°ª«Gªº¼Ä¤H
+        highlightedEnemies.Clear(); // ï¿½Mï¿½ï¿½ï¿½wï¿½ï¿½ï¿½Gï¿½ï¿½ï¿½Ä¤H
 
-        Enemy[] all = FindObjectsOfType<Enemy>(); // §ä¥X©Ò¦³¼Ä¤H
+        Enemy[] all = FindObjectsOfType<Enemy>(); // ï¿½ï¿½Xï¿½Ò¦ï¿½ï¿½Ä¤H
 
-        foreach (var off in offsets) // ¹ï¨C­Ó°¾²¾¶i¦æÀË¬d
+        foreach (var off in offsets) // ï¿½ï¿½Cï¿½Ó°ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½Ë¬d
         {
-            Vector2Int targetPos = center + off; // ­pºâ¥Ø¼Ð®æ¤l®y¼Ð
+            Vector2Int targetPos = center + off; // ï¿½pï¿½ï¿½Ø¼Ð®ï¿½lï¿½yï¿½ï¿½
 
-            foreach (var e in all) // ÀË¬d©Ò¦³¼Ä¤H
+            foreach (var e in all) // ï¿½Ë¬dï¿½Ò¦ï¿½ï¿½Ä¤H
             {
-                if (e.gridPosition == targetPos) // ¦pªG¼Ä¤Hªº¦ì¸m²Å¦X¥Ø¼Ð®æ
+                if (e.gridPosition == targetPos) // ï¿½pï¿½Gï¿½Ä¤Hï¿½ï¿½ï¿½ï¿½mï¿½Å¦Xï¿½Ø¼Ð®ï¿½
                 {
-                    if (!highlightedEnemies.Contains(e)) // ¦pªGÁÙ¨S°ª«G
+                    if (!highlightedEnemies.Contains(e)) // ï¿½pï¿½Gï¿½Ù¨Sï¿½ï¿½ï¿½G
                     {
-                        e.SetHighlight(true); // ³]©w¬°°ª«Gª¬ºA
-                        highlightedEnemies.Add(e); // ¥[¤J°ª«G²M³æ
+                        e.SetHighlight(true); // ï¿½]ï¿½wï¿½ï¿½ï¿½ï¿½ï¿½Gï¿½ï¿½ï¿½A
+                        highlightedEnemies.Add(e); // ï¿½[ï¿½Jï¿½ï¿½ï¿½Gï¿½Mï¿½ï¿½
                     }
                 }
             }
         }
     }
 
-    // §A¥i¥H¦b Player.DrawCards / DiscardCards «á, or StartTurn() «á, 
-    // ¥H¤Î PlayCard(...) «á, ³£©I¥s RefreshHandUI() §ó·sµe­±¡C
+    // ï¿½Aï¿½iï¿½Hï¿½b Player.DrawCards / DiscardCards ï¿½ï¿½, or StartTurn() ï¿½ï¿½, 
+    // ï¿½Hï¿½ï¿½ PlayCard(...) ï¿½ï¿½, ï¿½ï¿½ï¿½Iï¿½s RefreshHandUI() ï¿½ï¿½sï¿½eï¿½ï¿½ï¿½C
 }
