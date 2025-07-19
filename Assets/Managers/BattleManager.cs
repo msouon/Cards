@@ -271,12 +271,12 @@ public class BattleManager : MonoBehaviour
         if (deckPile)
         {
             Text t = deckPile.GetComponentInChildren<Text>();
-            if (t) t.text = "�P�w: " + player.deck.Count;
+            if (t) t.text = "牌庫區: " + player.deck.Count;
         }
         if (discardPile)
         {
             Text t2 = discardPile.GetComponentInChildren<Text>();
-            if (t2) t2.text = "��P: " + player.discardPile.Count;
+            if (t2) t2.text = "棄牌區: " + player.discardPile.Count;
         }
         // 1. ���M���{�����l����(��PUI)
         foreach (Transform child in handPanel)

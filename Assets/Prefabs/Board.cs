@@ -3,52 +3,38 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// �޲z�Ҧ� BoardTile�A�ô��Ѭd�ߥ\��
+/// 棋盤管理，儲存 BoardTile 字典
 /// </summary>
 public class Board : MonoBehaviour
 {
-    // ��Ҧ� Tile �� (x,y) ������
-    private Dictionary<Vector2Int, BoardTile> tileDict = new Dictionary<Vector2Int, BoardTile>();
-  
+    private Dictionary<Vector2Int, BoardTile> tileDict = new Dictionary<Vector2Int, BoardTile>();  // 座標->格子映射
+
     private void Awake()
     {
-        // �۰ʦ����l���󤤪� BoardTile
+        // 讀取所有子物件的 BoardTile 並加入字典
         BoardTile[] tiles = GetComponentsInChildren<BoardTile>();
-        foreach (var t in tiles)
-        {
-            tileDict[t.gridPosition] = t;
-        }
+        foreach(var t in tiles) tileDict[t.gridPosition] = t;
     }
 
-    /// <summary>
-    /// �̮y�Ш��^ BoardTile�F�Y�L�^�� null
-    /// </summary>
-    public BoardTile GetTileAt(Vector2Int pos)
+    public BoardTile GetTileAt(Vector2Int pos) // 根據座標取得格子
     {
         tileDict.TryGetValue(pos, out BoardTile tile);
         return tile;
     }
 
-    /// <summary>
-    /// ��Ҧ� Tile �����G�P�i�I������
-    /// </summary>
-    public void ResetAllTilesSelectable()
+    public void ResetAllTilesSelectable()     // 重置所有格子可選
     {
-        foreach (var kv in tileDict)
-        {
-            kv.Value.SetSelectable(false);
-        }
+        foreach(var kv in tileDict) kv.Value.SetSelectable(false);
     }
 
-    // ���o�F��|��
-    public List<BoardTile> GetAdjacentTiles(Vector2Int pos)
+    public List<BoardTile> GetAdjacentTiles(Vector2Int pos) // 取得相鄰格子
     {
         List<BoardTile> result = new List<BoardTile>();
-        Vector2Int[] offs = { new Vector2Int(4, 0), new Vector2Int(-4, 0), new Vector2Int(-2, -4), new Vector2Int(2, -4), new Vector2Int(-2, 4), new Vector2Int(2, 4) };
-        foreach (var o in offs)
+        Vector2Int[] offs = { new Vector2Int(2,0), new Vector2Int(-2,0), new Vector2Int(-1,-2), new Vector2Int(1,-2), new Vector2Int(-1,2), new Vector2Int(1,2) };
+        foreach(var o in offs)
         {
-            BoardTile t = GetTileAt(pos + o);
-            if (t != null) result.Add(t);
+            var t = GetTileAt(pos+o);
+            if(t!=null) result.Add(t);
         }
         return result;
     }
