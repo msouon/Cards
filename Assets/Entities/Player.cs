@@ -4,27 +4,27 @@ using System.Collections.Generic;
 
 public class Player : MonoBehaviour
 {
-    [Header("Äİ©Ê")]
+    [Header("ï¿½İ©ï¿½")]
     public int maxHP = 50;
     public int currentHP;
     public int energy = 5;
     public int block = 0;
 
-    [Header("¥dµPºŞ²z")]
+    [Header("ï¿½dï¿½Pï¿½Ş²z")]
     public List<CardBase> deck = new List<CardBase>();
     public List<CardBase> hand = new List<CardBase>();
     public List<CardBase> discardPile = new List<CardBase>();
-    public List<CardBase> relics = new List<CardBase>();  // ¦¬¶°¨ìªº¿òª«
+    public List<CardBase> relics = new List<CardBase>();  // ï¿½ï¿½ï¿½ï¿½ï¿½ìªºï¿½ï¿½
 
-    [Header("¦^¦X¤º¬ö¿ı")]
-    public bool hasDiscardedThisTurn = false;  // ¬O§_±ó¹LµP
-    public int discardCountThisTurn = 0;       // ±óµP¼Æ
-    public int attackUsedThisTurn = 0;         // ¥»¦^¦X¨Ï¥Îªº§ğÀ»µP¼Æ
+    [Header("ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
+    public bool hasDiscardedThisTurn = false;  // ï¿½Oï¿½_ï¿½ï¿½Lï¿½P
+    public int discardCountThisTurn = 0;       // ï¿½ï¿½Pï¿½ï¿½
+    public int attackUsedThisTurn = 0;         // ï¿½ï¿½ï¿½^ï¿½Xï¿½Ï¥Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Pï¿½ï¿½
 
-    // Â²©ö¬ö¿ıª±®a¦ì¸m(­Y°µ2Dºô®æ¦a¹Ï)
+    // Â²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½aï¿½ï¿½m(ï¿½Yï¿½ï¿½2Dï¿½ï¿½ï¿½ï¿½aï¿½ï¿½)
     public Vector2Int position = new Vector2Int(0, 0);
 
-    // Buffµ²ºc
+    // Buffï¿½ï¿½ï¿½c
     public PlayerBuffs buffs = new PlayerBuffs();
 
     private void Awake()
@@ -33,22 +33,22 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ¦^¦X¶}©l®É½Õ¥Î
+    /// ï¿½^ï¿½Xï¿½}ï¿½lï¿½É½Õ¥ï¿½
     /// </summary>
     public void StartTurn()
     {
-        block = 0;  // µø¹CÀ¸»İ¨D¡A­Y¬OSLAY THE SPIRE­·®æ¡A¦^¦Xµ²§ô·|²M°£block
-        energy = 5; // ­«¸m¯à¶q(¤]¥iµø¹CÀ¸³W«h)
+        block = 0;  // ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½İ¨Dï¿½Aï¿½Yï¿½OSLAY THE SPIREï¿½ï¿½ï¿½ï¿½Aï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½|ï¿½Mï¿½ï¿½block
+        energy = 5; // ï¿½ï¿½ï¿½mï¿½ï¿½q(ï¿½]ï¿½iï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Wï¿½h)
         hasDiscardedThisTurn = false;
         discardCountThisTurn = 0;
         attackUsedThisTurn = 0;
-        DrawCards(5); // ¨Ò¦p©â5±i
+        DrawCards(5); // ï¿½Ò¦pï¿½ï¿½5ï¿½i
         BattleManager bm = FindObjectOfType<BattleManager>();
         bm.RefreshHandUI();
 
-        // ¦^¦X¶}©lbuff³B²z (¦p movementCostModifyÂk¹s, damageTakenRatio­«¸mµ¥)
+        // ï¿½^ï¿½Xï¿½}ï¿½lbuffï¿½Bï¿½z (ï¿½p movementCostModifyï¿½kï¿½s, damageTakenRatioï¿½ï¿½ï¿½mï¿½ï¿½)
         buffs.OnTurnStartReset();
-        // ­Y¦³¿òª« "¬\¤ì®ÑÅÒ" => OnTurnStart
+        // ï¿½Yï¿½ï¿½ï¿½ï¿½ "ï¿½\ï¿½ï¿½ï¿½ï¿½ï¿½" => OnTurnStart
         foreach (CardBase r in relics)
         {
             if (r is Relic_KuMuShuQian kk)
@@ -59,11 +59,11 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ¦^¦Xµ²§ô®É¡]¦b BattleManager ¸Ì©I¥s¡^
+    /// ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½É¡]ï¿½b BattleManager ï¿½Ì©Iï¿½sï¿½^
     /// </summary>
     public void EndTurn()
     {
-        // ­Y¨Ï¥Î¯}Å]Â­ => OnEndTurn
+        // ï¿½Yï¿½Ï¥Î¯}ï¿½]Â­ => OnEndTurn
         foreach (CardBase r in relics)
         {
             if (r is Relic_PoMoXiao pmx)
@@ -72,12 +72,12 @@ public class Player : MonoBehaviour
             }
         }
 
-        // °²³]¡uÂ½½c­ËÂd¡v»İ­n¦b¦^¦Xµ²§ôÀH¾÷±ó2 => 
+        // ï¿½ï¿½ï¿½]ï¿½uÂ½ï¿½cï¿½ï¿½ï¿½dï¿½vï¿½İ­nï¿½bï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Hï¿½ï¿½ï¿½ï¿½2 => 
         if (buffs.needRandomDiscardAtEnd > 0)
         {
             int n = buffs.needRandomDiscardAtEnd;
             buffs.needRandomDiscardAtEnd = 0;
-            // ÀH¾÷¥á n ±i
+            // ï¿½Hï¿½ï¿½ï¿½ï¿½ n ï¿½i
             for (int i = 0; i < n; i++)
             {
                 if (hand.Count > 0)
@@ -92,24 +92,24 @@ public class Player : MonoBehaviour
             }
         }
 
-        // ¦^¦Xµ²§ô¡A±N damageTakenRatio «ì´_1.0f ©Î¬İ§A³]­p
-        // buffµ¥°µ¬ÛÀ³³B²z
+        // ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½N damageTakenRatio ï¿½ï¿½_1.0f ï¿½Î¬İ§Aï¿½]ï¿½p
+        // buffï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Bï¿½z
         buffs.OnTurnEndReset();
     }
 
     /// <summary>
-    /// ¦©¯à¶q
+    /// ï¿½ï¿½ï¿½ï¿½q
     /// </summary>
     public void UseEnergy(int cost)
     {
         Debug.Log($"UseEnergy: deducting {cost} energy. Energy before={energy}");
-        // ­Ybuff.nextAttackCostModify©Îbuff.movementCostModify¦³¼vÅT¡AÀ³¦b PlayCard ®É³B²z
+        // ï¿½Ybuff.nextAttackCostModifyï¿½ï¿½buff.movementCostModifyï¿½ï¿½ï¿½vï¿½Tï¿½Aï¿½ï¿½ï¿½b PlayCard ï¿½É³Bï¿½z
         energy -= cost;
         if (energy < 0) energy = 0;
     }
 
     /// <summary>
-    /// ¨Ì·Óbuff­pºâ³Ì²×§ğÀ»¶Ë®`¡A¨Ã®ø¯Ó¤@¦¸©Ê¥[¦¨
+    /// ï¿½Ì·ï¿½buffï¿½pï¿½ï¿½Ì²×§ï¿½ï¿½ï¿½ï¿½Ë®`ï¿½Aï¿½Ã®ï¿½ï¿½Ó¤@ï¿½ï¿½ï¿½Ê¥[ï¿½ï¿½
     /// </summary>
     public int CalculateAttackDamage(int baseDamage)
     {
@@ -120,12 +120,12 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ¼W¥[®æ¾×
+    /// ï¿½Wï¿½[ï¿½ï¿½ï¿½
     /// </summary>
     public void AddBlock(int amount)
     {
         block += amount;
-        // Ä²µo¬Y¨Ç¿òª«ÀË¬d(¦pµµ¹q¨¤)
+        // Ä²ï¿½oï¿½Yï¿½Ç¿ï¿½ï¿½Ë¬d(ï¿½pï¿½ï¿½ï¿½qï¿½ï¿½)
         foreach (CardBase r in relics)
         {
             if (r is Relic_ZiDianJiao z)
@@ -136,7 +136,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ¨ü¶Ë(¦Ò¼{buff: damageTakenRatio)
+    /// ï¿½ï¿½ï¿½ï¿½(ï¿½Ò¼{buff: damageTakenRatio)
     /// </summary>
     public void TakeDamage(int dmg)
     {
@@ -163,7 +163,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ª½±µ¦©¦å(µLµøblock) - µ¹¦Û´İ©Î¯S®í³]­p
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½Lï¿½ï¿½block) - ï¿½ï¿½ï¿½Û´İ©Î¯Sï¿½ï¿½ï¿½]ï¿½p
     /// </summary>
     public void TakeDamageDirect(int dmg)
     {
@@ -172,7 +172,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ©â n ±iµP
+    /// ï¿½ï¿½ n ï¿½iï¿½P
     /// </summary>
     public void DrawCards(int n)
     {
@@ -180,9 +180,9 @@ public class Player : MonoBehaviour
         {
             if (deck.Count == 0)
             {
-                // µP®wªÅ => ¹Á¸Õ¬~µP
+                // ï¿½Pï¿½wï¿½ï¿½ => ï¿½ï¿½ï¿½Õ¬~ï¿½P
                 ReshuffleDiscardIntoDeck();
-                // ­YÁÙ¬O¨S¥d => break
+                // ï¿½Yï¿½Ù¬Oï¿½Sï¿½d => break
                 if (deck.Count == 0) break;
             }
             CardBase top = deck[0];
@@ -222,10 +222,10 @@ public class Player : MonoBehaviour
 
     public void ReshuffleDiscardIntoDeck()
     {
-        // ¦X¨Ö
+        // ï¿½Xï¿½ï¿½
         deck.AddRange(discardPile);
         discardPile.Clear();
-        // ¬~µP
+        // ï¿½~ï¿½P
         ShuffleDeck();
     }
 
@@ -242,7 +242,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ±ó n ±iµP (Â²¤Æ³B²z: ±q¤âµP³Ì«á´X±i¥á±ó)
+    /// ï¿½ï¿½ n ï¿½iï¿½P (Â²ï¿½Æ³Bï¿½z: ï¿½qï¿½ï¿½Pï¿½Ì«ï¿½Xï¿½iï¿½ï¿½ï¿½)
     /// </summary>
     public void DiscardCards(int n)
     {
@@ -256,7 +256,7 @@ public class Player : MonoBehaviour
         hasDiscardedThisTurn = true;
         discardCountThisTurn += n;
 
-        // ½ü°j¦ËÂ²Ä²µo
+        // ï¿½ï¿½ï¿½jï¿½ï¿½Â²Ä²ï¿½o
         foreach (CardBase r in relics)
         {
             if (r is Relic_LunHuiZhuJian zhujian)
@@ -267,7 +267,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ±ó1±iµP (µ¹¿UºÉ±Ùµ¥¨Ï¥Î)
+    /// ï¿½ï¿½1ï¿½iï¿½P (ï¿½ï¿½ï¿½Uï¿½É±Ùµï¿½ï¿½Ï¥ï¿½)
     /// </summary>
     public bool DiscardOneCard()
     {
@@ -279,7 +279,7 @@ public class Player : MonoBehaviour
         hasDiscardedThisTurn = true;
         discardCountThisTurn++;
 
-        // Ä²µo½ü°j¦ËÂ²
+        // Ä²ï¿½oï¿½ï¿½ï¿½jï¿½ï¿½Â²
         foreach (CardBase r in relics)
         {
             if (r is Relic_LunHuiZhuJian zhujian)
@@ -292,8 +292,8 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀË¬d¬O§_­pµe±óµP(µ¹±j¤ÆÅ@¬Şµ¥¥Î)
-    /// ¦¹¥Ü½dª½±µ¥Î hasDiscardedThisTurn ·í±ø¥ó
+    /// ï¿½Ë¬dï¿½Oï¿½_ï¿½pï¿½eï¿½ï¿½P(ï¿½ï¿½ï¿½jï¿½ï¿½ï¿½@ï¿½Şµï¿½ï¿½ï¿½)
+    /// ï¿½ï¿½ï¿½Ü½dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ hasDiscardedThisTurn ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public bool CheckDiscardPlan()
     {
@@ -301,18 +301,36 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// ²¾°Ê¦Ü«ü©w®æ¤l(­Y°µ2Dºô®æ)
+    /// ï¿½ï¿½ï¿½Ê¦Ü«ï¿½ï¿½wï¿½ï¿½l(ï¿½Yï¿½ï¿½2Dï¿½ï¿½ï¿½ï¿½)
     /// </summary>
-    public void MoveToPosition(Vector2Int targetPos)
+    public void MoveToPosition(Vector2Int targetGridPos)
+{
+    // 1. æ›´æ–°é‚è¼¯åº§æ¨™
+    position = targetGridPos;
+
+    // 2. å–å¾—æ•´å€‹æ£‹ç›¤çš„ç®¡ç†å™¨
+    Board board = FindObjectOfType<Board>();
+    if (board == null)
     {
-        // Â²©ö¥Ü½d
-        position = targetPos;
-        // ¦P®É²¾°Ê Transform?
-        transform.position = new Vector3(targetPos.x, targetPos.y, 0f);
+        Debug.LogWarning("Board not found!");
+        return;
     }
 
+    // 3. æ‹¿åˆ°é€™å€‹æ ¼å­çš„ BoardTile
+    BoardTile tile = board.GetTileAt(targetGridPos);
+    if (tile == null)
+    {
+        Debug.LogWarning($"No tile at {targetGridPos}");
+        return;
+    }
+
+    // 4. å°‡ç©å®¶çš„ä¸–ç•Œåº§æ¨™è¨­æˆè©²æ ¼å­çš„ transform.position
+    transform.position = tile.transform.position;
+}
+
+
     /// <summary>
-    /// Àş²¾ (ÁY¦a¦¨¤o¥i¥Î)
+    /// ï¿½ï¿½ï¿½ï¿½ (ï¿½Yï¿½aï¿½ï¿½ï¿½oï¿½iï¿½ï¿½)
     /// </summary>
     public void TeleportToPosition(Vector2Int targetPos)
     {
@@ -322,54 +340,54 @@ public class Player : MonoBehaviour
 }
 
 /// <summary>
-/// ª±®a¨­¤WªºBuff»P¦^¦Xª¬ºA
+/// ï¿½ï¿½ï¿½aï¿½ï¿½ï¿½Wï¿½ï¿½Buffï¿½Pï¿½^ï¿½Xï¿½ï¿½ï¿½A
 /// </summary>
 [System.Serializable]
 public class PlayerBuffs
 {
-    public float damageTakenRatio = 1.0f;   // ¨ü¶Ë­¿²v(¯«­°¥i =0.5)
-    public int nextAttackPlus = 0;         // ¤U¦¸§ğÀ»ÃB¥~¶Ë®`
-    public int nextDamageTakenUp = 0;      // ¼Ä¤H¤U¦¸¨ü¶Ë+X (¤]¥i©ñ¦b Enemy ºİ)
-    public int nextAttackCostModify = 0;   // ¤U¦¸§ğÀ»¥d¶O¥Î¼W´î
-    public int movementCostModify = 0;     // ¥»¦^¦X©Ò¦³²¾°ÊµP¶O¥Î¼W´î
-    public int nextTurnDrawChange = 0;     // ¤U¦^¦X©âµP¼W´î
-    public int needRandomDiscardAtEnd = 0; // ¦^¦Xµ²§ôÀH¾÷±óµP
-    public int meleeDamageReduce = 0;      // ªñ¾Ô¶Ë®`©T©w´î¤Ö
-    public int weak = 0;                   // µê®z¦^¦X¼Æ
-    public int stun = 0;                   // ·w¯t¦^¦X(µLªk¦æ°Ê)
-    public int nextTurnAllAttackPlus = 0;  // ¤U¦^¦X©Ò¦³§ğÀ»+X
+    public float damageTakenRatio = 1.0f;   // ï¿½ï¿½ï¿½Ë­ï¿½ï¿½v(ï¿½ï¿½ï¿½ï¿½ï¿½i =0.5)
+    public int nextAttackPlus = 0;         // ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Bï¿½~ï¿½Ë®`
+    public int nextDamageTakenUp = 0;      // ï¿½Ä¤Hï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+X (ï¿½]ï¿½iï¿½ï¿½b Enemy ï¿½ï¿½)
+    public int nextAttackCostModify = 0;   // ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½dï¿½Oï¿½Î¼Wï¿½ï¿½
+    public int movementCostModify = 0;     // ï¿½ï¿½ï¿½^ï¿½Xï¿½Ò¦ï¿½ï¿½ï¿½ï¿½ÊµPï¿½Oï¿½Î¼Wï¿½ï¿½
+    public int nextTurnDrawChange = 0;     // ï¿½Uï¿½^ï¿½Xï¿½ï¿½Pï¿½Wï¿½ï¿½
+    public int needRandomDiscardAtEnd = 0; // ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Hï¿½ï¿½ï¿½ï¿½P
+    public int meleeDamageReduce = 0;      // ï¿½ï¿½Ô¶Ë®`ï¿½Tï¿½wï¿½ï¿½ï¿½
+    public int weak = 0;                   // ï¿½ï¿½zï¿½^ï¿½Xï¿½ï¿½
+    public int stun = 0;                   // ï¿½wï¿½tï¿½^ï¿½X(ï¿½Lï¿½kï¿½ï¿½ï¿½)
+    public int nextTurnAllAttackPlus = 0;  // ï¿½Uï¿½^ï¿½Xï¿½Ò¦ï¿½ï¿½ï¿½ï¿½ï¿½+X
 
     /// <summary>
-    /// ¦^¦X¶}©l­«¸m©Î­pºâ
+    /// ï¿½^ï¿½Xï¿½}ï¿½lï¿½ï¿½ï¿½mï¿½Î­pï¿½ï¿½
     /// </summary>
     public void OnTurnStartReset()
     {
-        // ¨Ò¦p¤W¤@¦^¦Xµ¹ªº nextTurnAllAttackPlus ¥i¦b³o¦^¦X¥Í®Ä
-        // damageTakenRatio¦^Âk1.0f? µø±¡ªp
-        // ³o¸Ì¶È¥Ü½d
+        // ï¿½Ò¦pï¿½Wï¿½@ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ nextTurnAllAttackPlus ï¿½iï¿½bï¿½oï¿½^ï¿½Xï¿½Í®ï¿½
+        // damageTakenRatioï¿½^ï¿½k1.0f? ï¿½ï¿½ï¿½ï¿½ï¿½p
+        // ï¿½oï¿½Ì¶È¥Ü½d
         if (stun > 0) stun--;
 
-        // µê®z¤]»¼´î
+        // ï¿½ï¿½zï¿½]ï¿½ï¿½ï¿½ï¿½
         if (weak > 0) weak--;
 
-        // nextAttackPlus ¥u°w¹ï"¤U¤@¦¸"§ğÀ», ¥Î«á¥iÂk0
-        // ¦pªG§A­n¦^¦X¶}©l´NÂk0, ¤]¥i
+        // nextAttackPlus ï¿½uï¿½wï¿½ï¿½"ï¿½Uï¿½@ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½, ï¿½Î«ï¿½iï¿½k0
+        // ï¿½pï¿½Gï¿½Aï¿½nï¿½^ï¿½Xï¿½}ï¿½lï¿½Nï¿½k0, ï¿½]ï¿½i
 
-        // movementCostModify ¥iÂk0
+        // movementCostModify ï¿½iï¿½k0
         movementCostModify = 0;
-        // nextAttackCostModify Âk0
+        // nextAttackCostModify ï¿½k0
         nextAttackCostModify = 0;
     }
 
     /// <summary>
-    /// ¦^¦Xµ²§ô³B²z
+    /// ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½Bï¿½z
     /// </summary>
     public void OnTurnEndReset()
     {
-        // damageTakenRatio ­Y¥u¦b¥»¦^¦X¥Í®Ä¡A¦^¦Xµ²§ô­n­«¸m
+        // damageTakenRatio ï¿½Yï¿½uï¿½bï¿½ï¿½ï¿½^ï¿½Xï¿½Í®Ä¡Aï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½nï¿½ï¿½ï¿½m
         damageTakenRatio = 1.0f;
-        // nextAttackPlus ¤]¥i²M¹s (­Y¥u¥Í®Ä¤@¦¸)
-        // needRandomDiscardAtEnd ¦b¥~³¡³B²z«áÂk0
+        // nextAttackPlus ï¿½]ï¿½iï¿½Mï¿½s (ï¿½Yï¿½uï¿½Í®Ä¤@ï¿½ï¿½)
+        // needRandomDiscardAtEnd ï¿½bï¿½~ï¿½ï¿½ï¿½Bï¿½zï¿½ï¿½ï¿½k0
     }
 }
 
