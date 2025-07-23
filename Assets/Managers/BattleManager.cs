@@ -31,6 +31,9 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     // 被高亮的敵人列表，用於攻擊選擇階段
     private List<Enemy> highlightedEnemies = new List<Enemy>();
 
+    // 被高亮的格子列表，用於移動選擇階段
+    private List<BoardTile> highlightedTiles = new List<BoardTile>();
+
     void Start()
     {
        stateMachine.ChangeState(new PlayerTurnState(this));
@@ -195,6 +198,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
                 new Vector2Int(-1,0), new Vector2Int(1,0)
             };
 
+        highlightedTiles.Clear();
         HighlightTilesWithOffsets(player.position, offs); // 高亮目標格子
     }
 
@@ -207,8 +211,11 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         {
             Vector2Int tilePos = centerPos + off;
             BoardTile tile = board.GetTileAt(tilePos);
-            if (tile != null&& !board.IsTileOccupied(tilePos))
+            if (tile != null && !board.IsTileOccupied(tilePos))
+            {
                 tile.SetSelectable(true);                  // 標記該格可選
+                highlightedTiles.Add(tile);
+            }
         }
     }
 
@@ -227,6 +234,9 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     {
         isSelectingMovementTile = false;
         currentMovementCard = null;
+        foreach (var t in highlightedTiles)
+            t.SetSelectable(false);
+        highlightedTiles.Clear();
         board.ResetAllTilesSelectable();
     }
 
@@ -236,6 +246,11 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     public bool OnTileClicked(BoardTile tile)
     {
         if (!isSelectingMovementTile) return false;
+        if (!highlightedTiles.Contains(tile))
+        {
+            CancelMovementSelection();
+            return false;
+        }
         if (board.IsTileOccupied(tile.gridPosition))
         {
             Debug.Log("Cannot move: tile occupied by enemy.");
@@ -258,6 +273,9 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
         isSelectingMovementTile = false;                  // 重置狀態
         currentMovementCard = null;
+        foreach (var t in highlightedTiles)
+            t.SetSelectable(false);
+        highlightedTiles.Clear();
         board.ResetAllTilesSelectable();                  // 清除所有高亮
         RefreshHandUI();
         return true;                                   // 更新 UI
