@@ -7,7 +7,7 @@ using UnityEngine.UI;                                    // 引用 UI 元件功�
 public class BattleManager : MonoBehaviour               // 戰鬥流程管理器，掛在場景中的空物件上
 {
     public Player player;                                 // 場景中玩家角色的引用
-    public Enemy enemy;                                   // 場景中敵人角色的引用
+    public List<Enemy> enemies = new List<Enemy>();       // 場景中敵人角色列表
     public GameObject cardPrefab;                         // 卡牌的 Prefab，用於生成卡牌 UI
 
     // 定義回合狀態枚舉
@@ -36,14 +36,20 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
     void Start()
     {
-       stateMachine.ChangeState(new PlayerTurnState(this));
+        enemies = new List<Enemy>(FindObjectsOfType<Enemy>());  // 收集場上的敵人
+        stateMachine.ChangeState(new PlayerTurnState(this));
     }
 
     void Update()
     {
        stateMachine.Update();
 
-        if (enemy != null && enemy.currentHP <= 0 && !(stateMachine.Current is VictoryState))
+       // 移除已被摧毀的敵人
+        enemies.RemoveAll(e => e == null);
+
+        // 全部敵人死亡則進入勝利狀態
+        bool allDead = enemies.Count == 0 || enemies.TrueForAll(e => e.currentHP <= 0);
+        if (allDead && !(stateMachine.Current is VictoryState))
         {
             stateMachine.ChangeState(new VictoryState(this));
         }
@@ -71,9 +77,11 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public void StartPlayerTurn()
     {
-        if (enemy != null)
-            enemy.ProcessTurnStart();                     // 敵人回合開始效果
-
+        foreach (var e in enemies)
+        {
+            if (e != null)
+                e.ProcessTurnStart();                     // 敵人回合開始效果
+        }
         int drawCount = 5 + player.buffs.nextTurnDrawChange;  // 計算抽牌數量
         drawCount = Mathf.Max(0, drawCount);               // 確保不為負
         player.buffs.nextTurnDrawChange = 0;               // 重置下回合抽牌變更
@@ -98,19 +106,27 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
      public IEnumerator EnemyTurnCoroutine()
     {
         
-        if (enemy != null)
-            enemy.ProcessTurnStart();                     // 敵人回合開始效果
-
+        foreach (var e in enemies)
+        {
+            if (e != null)
+                e.ProcessTurnStart();                     // 敵人回合開始效果
+        }
         yield return new WaitForSeconds(1f);               // 等待 1 秒
 
-        if (enemy != null)
-            enemy.EnemyAction(player);                    // 敵人執行攻擊或行動
+        foreach (var e in enemies)
+        {
+            if (e != null)
+                e.EnemyAction(player);                    // 敵人執行攻擊或行動
+        }
 
         yield return new WaitForSeconds(1f);               // 等待 1 秒
 
         // 清除本回合所有格擋 (Slay the Spire 流程)
         player.block = 0;
-        if (enemy != null) enemy.block = 0;
+        foreach (var e in enemies)
+        {
+            if (e != null) e.block = 0;
+        }
 
         // 回到玩家回合
         stateMachine.ChangeState(new PlayerTurnState(this));
@@ -143,8 +159,8 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
             return;
         }
 
-        cardData.ExecuteEffect(player, enemy);            // 執行卡牌效果
-
+        Enemy target = enemies.Find(e => e != null && e.currentHP > 0);
+        cardData.ExecuteEffect(player, target);            // 執行卡牌效果
         // 使用攻擊卡時，更新統計和清除下一次加傷
         if (cardData.cardType == CardType.Attack)
         {
