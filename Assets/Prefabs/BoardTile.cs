@@ -3,32 +3,32 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ¦a¹Ï³æ¤@®æ¡A¥i³Q°ª«G»PÂIÀ»
+///åœ°åœ–å–®ä¸€æ ¼ï¼Œå¯è¢«é«˜äº®èˆ‡é»æ“Š
 /// </summary>
 public class BoardTile : MonoBehaviour
 {
-    public Vector2Int gridPosition;              // ¥²¶ñ¡G¸Ó®æ¦b¦a¹Ïªº®y¼Ğ
-    [SerializeField] private GameObject highlightObject; // «ü¦V°ª«G¥Îªº¤lª«¥ó
+    public Vector2Int gridPosition;              // å¿…å¡«ï¼šè©²æ ¼åœ¨åœ°åœ–çš„åº§æ¨™
+    [SerializeField] private GameObject highlightObject; // æŒ‡å‘é«˜äº®ç”¨çš„å­ç‰©ä»¶
 
-    // ¤¸¯À¼ĞÅÒ¬ö¿ı
+    // å…ƒç´ æ¨™ç±¤ç´€éŒ„
     public HashSet<ElementType> elements = new HashSet<ElementType>();
-    public bool growthTrap = false; // ¤ô+¤ì²£¥Íªº³´¨À
-    // Åı BattleManager ©I¥s
+    public bool growthTrap = false; // æ°´+æœ¨ç”¢ç”Ÿçš„é™·é˜±
+    // è®“ BattleManager å‘¼å«
 
     public void TriggerGrowthTrap(Enemy enemy)
     {
         if (growthTrap)
         {
-            enemy.TakeDamage(3);  // ¨Ò¦p¦©3¦å
+            enemy.TakeDamage(3);  // ä¾‹å¦‚æ‰£3è¡€
             Debug.Log("Growth trap triggered! Enemy took damage.");
         }
     }
     public void SetSelectable(bool canSelect)
     {
-        // Åã¥Ü/ÁôÂÃ°ª«G
+        // é¡¯ç¤º/éš±è—é«˜äº®
         if (highlightObject) highlightObject.SetActive(canSelect);
 
-        // °ÊºA¥[/²¾°£ÂIÀ»°»´ú²Õ¥ó
+        // å‹•æ…‹åŠ /ç§»é™¤é»æ“Šåµæ¸¬çµ„ä»¶
         var selectable = GetComponent<BoardTileSelectable>();
         if (canSelect && selectable == null)
         {
@@ -40,7 +40,16 @@ public class BoardTile : MonoBehaviour
         }
     }
 
-    // ·s¼W¡G¤¸¯À³B²z
+    /// <summary>
+    /// å–®ç´”æ§åˆ¶é«˜äº®é¡¯ç¤ºï¼Œä¸å½±éŸ¿å¯é¸ç‹€æ…‹
+    /// </summary>
+    /// <param name="show">æ˜¯å¦é¡¯ç¤ºé«˜äº®</param>
+    public void SetHighlight(bool show)
+    {
+        if (highlightObject) highlightObject.SetActive(show);
+    }
+
+    /// æ–°å¢ï¼šå…ƒç´ è™•ç†
     public void AddElement(ElementType e)
     {
         elements.Add(e);

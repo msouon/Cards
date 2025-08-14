@@ -29,6 +29,10 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
     // 是否正在選擇攻擊目標的旗標
     private bool isSelectingAttackTarget = false;
+
+     // 是否正在選擇起始位置的旗標
+    private bool isSelectingStartTile = false;
+
     // 儲存當前正在使用的攻擊卡
     private CardBase currentAttackCard = null;
 
@@ -40,12 +44,48 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
     void Start()
     {
-        SetupPlayer();
+         StartCoroutine(GameStartRoutine());
+    }
+
+    private IEnumerator GameStartRoutine()
+    {
+        if (board != null)
+            yield return StartCoroutine(SelectPlayerStartTile());
+
         SpawnInitialEnemies();
         enemies = new List<Enemy>(FindObjectsOfType<Enemy>());  // 收集場上的敵人
         stateMachine.ChangeState(new PlayerTurnState(this));
     }
-    
+
+    private IEnumerator SelectPlayerStartTile()
+    {
+        isSelectingStartTile = true;
+
+        List<Vector2Int> positions = board.GetAllPositions();
+        foreach (var pos in positions)
+        {
+            BoardTile t = board.GetTileAt(pos);
+            if (t.GetComponent<BoardTileSelectable>() == null)
+                t.gameObject.AddComponent<BoardTileSelectable>();
+            if (t.GetComponent<BoardTileHoverHighlight>() == null)
+                t.gameObject.AddComponent<BoardTileHoverHighlight>();
+        }
+
+        while (isSelectingStartTile)
+            yield return null;
+
+        foreach (var pos in positions)
+        {
+            BoardTile t = board.GetTileAt(pos);
+            BoardTileHoverHighlight hover = t.GetComponent<BoardTileHoverHighlight>();
+            if (hover) Destroy(hover);
+            t.SetHighlight(false);
+        }
+
+        SetupPlayer();
+        board.ResetAllTilesSelectable();
+    }
+
     // 移動玩家到指定起始格子
     private void SetupPlayer()
     {
@@ -300,6 +340,12 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public bool OnTileClicked(BoardTile tile)
     {
+         if (isSelectingStartTile)
+        {
+            playerStartPos = tile.gridPosition;
+            isSelectingStartTile = false;
+            return true;
+        }
         if (!isSelectingMovementTile) return false;
         if (!highlightedTiles.Contains(tile))
         {
