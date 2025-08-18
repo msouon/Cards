@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+#if UNITY_EDITOR
 using UnityEditor;
 
 
@@ -9,20 +10,14 @@ namespace TMPro.Examples
 
     public class TMP_TextInfoDebugTool : MonoBehaviour
     {
-        // Since this script is used for debugging, we exclude it from builds.
-        // TODO: Rework this script to make it into an editor utility.
-        #if UNITY_EDITOR
+        // This utility relies on editor-only APIs and should not be included in builds.
         public bool ShowCharacters;
         public bool ShowWords;
         public bool ShowLinks;
         public bool ShowLines;
         public bool ShowMeshBounds;
         public bool ShowTextBounds;
-        [Space(10)]
-        [TextArea(2, 2)]
-        public string ObjectStats;
-
-        [SerializeField]
+        
         private TMP_Text m_TextComponent;
 
         private Transform m_Transform;
@@ -47,13 +42,10 @@ namespace TMPro.Examples
             // Get a reference to the text object's textInfo
             m_TextInfo = m_TextComponent.textInfo;
 
-            // Update Text Statistics
-            ObjectStats = "Characters: " + m_TextInfo.characterCount + "   Words: " + m_TextInfo.wordCount + "   Spaces: " + m_TextInfo.spaceCount + "   Sprites: " + m_TextInfo.spriteCount + "   Links: " + m_TextInfo.linkCount
-                          + "\nLines: " + m_TextInfo.lineCount + "   Pages: " + m_TextInfo.pageCount;
+             // Update Text Statistics (kept local to avoid serialized property issues)
+            string objectStats = "Characters: " + m_TextInfo.characterCount + "   Words: " + m_TextInfo.wordCount + "   Spaces: " + m_TextInfo.spaceCount + "   Sprites: " + m_TextInfo.spriteCount + "   Links: " + m_TextInfo.linkCount
+                                 + "\nLines: " + m_TextInfo.lineCount + "   Pages: " + m_TextInfo.pageCount;
 
-            // Get the handle size for drawing the various
-            m_ScaleMultiplier = m_TextComponent.GetType() == typeof(TextMeshPro) ? 1 : 0.1f;
-            m_HandleSize = HandleUtility.GetHandleSize(m_Transform.position) * m_ScaleMultiplier;
 
             // Draw line metrics
             #region Draw Lines
@@ -646,7 +638,7 @@ namespace TMPro.Examples
             UnityEditor.Handles.DrawDottedLine(tr, br, dotSpacing);
             UnityEditor.Handles.DrawDottedLine(br, bl, dotSpacing);
         }
-        #endif
+        
     }
 }
-
+#endif
