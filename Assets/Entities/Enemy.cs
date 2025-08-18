@@ -164,7 +164,8 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
 
     public void ProcessTurnStart()
     {
-        foreach (var tag in elementTags)
+        var tagsCopy = new List<ElementType>(elementTags);
+        foreach (var tag in tagsCopy)
         {
             var strat = ElementalStrategyProvider.Get(tag);
 
