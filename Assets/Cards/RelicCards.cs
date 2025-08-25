@@ -2,12 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-#region 5 ºØ¿òª«
+#region 5 ï¿½Ø¿ï¿½
 
 /// <summary>
-/// ½ü°j¦ËÂ² - ±óµP«áÀò±o®æ¾×, ¤@¦¸±ó2±i¥H¤W®É¦A©â1
+/// ï¿½ï¿½ï¿½jï¿½ï¿½Â² - ï¿½ï¿½Pï¿½ï¿½ï¿½ï¿½oï¿½ï¿½ï¿½, ï¿½@ï¿½ï¿½ï¿½ï¿½2ï¿½iï¿½Hï¿½Wï¿½É¦Aï¿½ï¿½1
 /// </summary>
-[CreateAssetMenu(fileName = "Relic_LunHuiZhuJian", menuName = "Cards/Relic/½ü°j¦ËÂ²")]
+[CreateAssetMenu(fileName = "Relic_LunHuiZhuJian", menuName = "Cards/Relic/ï¿½ï¿½ï¿½jï¿½ï¿½Â²")]
 public class Relic_LunHuiZhuJian : CardBase
 {
     public int blockPerDiscard = 1;
@@ -20,7 +20,7 @@ public class Relic_LunHuiZhuJian : CardBase
 
     public override void ExecuteEffect(Player player, Enemy enemy)
     {
-        // ¤£·|¥D°Ê³Q¥´¥X
+        // ï¿½ï¿½ï¿½|ï¿½Dï¿½Ê³Qï¿½ï¿½ï¿½X
     }
 
     public void OnPlayerDiscard(Player player, int discardCount)
@@ -35,9 +35,9 @@ public class Relic_LunHuiZhuJian : CardBase
 }
 
 /// <summary>
-/// ¦ÊÄ_Ån - ¾Ô°«¶}©l©â1, ¨C¦^¦X­Y¥´¥X¦Ü¤Ö2±i§ðÀ»¦A¥Î1§Þ¯à®É©â1
+/// ï¿½ï¿½ï¿½_ï¿½n - ï¿½Ô°ï¿½ï¿½}ï¿½lï¿½ï¿½1, ï¿½Cï¿½^ï¿½Xï¿½Yï¿½ï¿½ï¿½Xï¿½Ü¤ï¿½2ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½1ï¿½Þ¯ï¿½É©ï¿½1
 /// </summary>
-[CreateAssetMenu(fileName = "Relic_BaiBaoNang", menuName = "Cards/Relic/¦ÊÄ_Ån")]
+[CreateAssetMenu(fileName = "Relic_BaiBaoNang", menuName = "Cards/Relic/ï¿½ï¿½ï¿½_ï¿½n")]
 public class Relic_BaiBaoNang : CardBase
 {
     private void OnEnable()
@@ -55,7 +55,7 @@ public class Relic_BaiBaoNang : CardBase
     }
 
     /// <summary>
-    /// ¥i¦bBattleManager¤¤ÀË¬d¡G­Y¥»¦^¦X¤w¥´¥X2±i§ðÀ»¡A¦A¥´¥X§Þ¯à«h©â1
+    /// ï¿½iï¿½bBattleManagerï¿½ï¿½ï¿½Ë¬dï¿½Gï¿½Yï¿½ï¿½ï¿½^ï¿½Xï¿½wï¿½ï¿½ï¿½X2ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½Aï¿½ï¿½ï¿½Xï¿½Þ¯ï¿½hï¿½ï¿½1
     /// </summary>
     public void OnPlayerUseSkillAfterTwoAttacks(Player player)
     {
@@ -64,9 +64,9 @@ public class Relic_BaiBaoNang : CardBase
 }
 
 /// <summary>
-/// µµ¹q¨¤ - ¨C¦¸Àò±o>=6®æ¾×´N¹ï¤U¦¸§ðÀ»+2¶Ë®`(­Y®æ¾×>=12¦A+2=+4)
+/// ï¿½ï¿½ï¿½qï¿½ï¿½ - ï¿½Cï¿½ï¿½ï¿½ï¿½o>=6ï¿½ï¿½×´Nï¿½ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+2ï¿½Ë®`(ï¿½Yï¿½ï¿½ï¿½>=12ï¿½A+2=+4)
 /// </summary>
-[CreateAssetMenu(fileName = "Relic_ZiDianJiao", menuName = "Cards/Relic/µµ¹q¨¤")]
+[CreateAssetMenu(fileName = "Relic_ZiDianJiao", menuName = "Cards/Relic/ï¿½ï¿½ï¿½qï¿½ï¿½")]
 public class Relic_ZiDianJiao : CardBase
 {
     private void OnEnable()
@@ -92,9 +92,9 @@ public class Relic_ZiDianJiao : CardBase
 }
 
 /// <summary>
-/// ¬\¤ì®ÑÅÒ - ¦^¦X¶}©l¥i¿ï¾Ü±ó1±iµP, ­Y±ó«h¥»¦^¦X²¾°ÊµP¶O¥Î-1
+/// ï¿½\ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½^ï¿½Xï¿½}ï¿½lï¿½iï¿½ï¿½Ü±ï¿½1ï¿½iï¿½P, ï¿½Yï¿½ï¿½hï¿½ï¿½ï¿½^ï¿½Xï¿½ï¿½ï¿½ÊµPï¿½Oï¿½ï¿½-1
 /// </summary>
-[CreateAssetMenu(fileName = "Relic_KuMuShuQian", menuName = "Cards/Relic/¬\¤ì®ÑÅÒ")]
+[CreateAssetMenu(fileName = "Relic_KuMuShuQian", menuName = "Cards/Relic/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
 public class Relic_KuMuShuQian : CardBase
 {
     private void OnEnable()
@@ -108,22 +108,22 @@ public class Relic_KuMuShuQian : CardBase
 
     public void OnTurnStart(Player player)
     {
-        // ¥ÑUI°Ýª±®a "­n¤£­n¥á1±iµP"?
-        // ³o¸ÌÂ²¤Æ
+        // ï¿½ï¿½UIï¿½Ýªï¿½ï¿½a "ï¿½nï¿½ï¿½ï¿½nï¿½ï¿½1ï¿½iï¿½P"?
+        // ï¿½oï¿½ï¿½Â²ï¿½ï¿½
         bool wantDiscard = true;
         if (wantDiscard && player.hand.Count > 0)
         {
             player.DiscardOneCard();
-            // ²¾°Ê¥d¶O¥Î-1
+            // ï¿½ï¿½ï¿½Ê¥dï¿½Oï¿½ï¿½-1
             player.buffs.movementCostModify -= 1;
         }
     }
 }
 
 /// <summary>
-/// ¯}Å]Â­ - ¨C¦^¦X­Y¨Ï¥Î>=3±i§ðÀ»µP, ¦^¦Xµ²§ô®É©â1±ó1, ­Y±ó±¼ªº¬O§ðÀ»µP«h¤U¦^¦X§ðÀ»+1(²Ö¿n)
+/// ï¿½}ï¿½]Â­ - ï¿½Cï¿½^ï¿½Xï¿½Yï¿½Ï¥ï¿½>=3ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½P, ï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½É©ï¿½1ï¿½ï¿½1, ï¿½Yï¿½ó±¼ªï¿½ï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½Pï¿½hï¿½Uï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½+1(ï¿½Ö¿n)
 /// </summary>
-[CreateAssetMenu(fileName = "Relic_PoMoXiao", menuName = "Cards/Relic/¯}Å]Â­")]
+[CreateAssetMenu(fileName = "Relic_PoMoXiao", menuName = "Cards/Relic/ï¿½}ï¿½]Â­")]
 public class Relic_PoMoXiao : CardBase
 {
     private void OnEnable()
@@ -139,9 +139,9 @@ public class Relic_PoMoXiao : CardBase
     {
         if (attackCardUsedThisTurn >= 3)
         {
-            // ©â1
+            // ï¿½ï¿½1
             player.DrawCards(1);
-            // ±ó1 (Â²¤Æ¬°±ó³Ì«á¤@±i)
+            // ï¿½ï¿½1 (Â²ï¿½Æ¬ï¿½ï¿½ï¿½Ì«ï¿½@ï¿½i)
             CardBase last = null;
             if (player.hand.Count > 0)
             {
@@ -151,7 +151,7 @@ public class Relic_PoMoXiao : CardBase
                 player.hasDiscardedThisTurn = true;
                 player.discardCountThisTurn++;
             }
-            // ­Y±ó±¼ªº¬O§ðÀ»µP => ¤U¦^¦X§ðÀ»+1
+            // ï¿½Yï¿½ó±¼ªï¿½ï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½P => ï¿½Uï¿½^ï¿½Xï¿½ï¿½ï¿½ï¿½+1
             if (last != null && last.cardType == CardType.Attack)
             {
                 player.buffs.nextTurnAllAttackPlus += 1;
