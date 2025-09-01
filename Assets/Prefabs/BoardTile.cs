@@ -11,7 +11,7 @@ public class BoardTile : MonoBehaviour
     [SerializeField] private GameObject highlightObject; // 指向高亮用的子物件
 
     // 元素標籤紀錄
-    public HashSet<ElementType> elements = new HashSet<ElementType>();
+    private HashSet<ElementType> elements = new HashSet<ElementType>();
     public bool growthTrap = false; // 水+木產生的陷阱
     // 讓 BattleManager 呼叫
 
