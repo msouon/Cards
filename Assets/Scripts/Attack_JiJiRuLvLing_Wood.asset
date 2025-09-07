@@ -15,7 +15,7 @@ MonoBehaviour:
   cardName: "\u6728"
   cost: 1
   description: "\u6728\u6728\u6728\u6728"
-  cardImage: {fileID: 21300000, guid: f397038082753b54b80165a14dd8ed8a, type: 3}
+  cardImage: {fileID: 21300000, guid: 727abb9873e98584c96c0d8aaf2bdc25, type: 3}
   cardType: 0
   rangeOffsets:
   - {x: -2, y: 0}
@@ -25,3 +25,4 @@ MonoBehaviour:
   - {x: -1, y: 2}
   - {x: 1, y: 2}
   baseDamage: 6
+  woodEffectPrefab: {fileID: 1712395579410472056, guid: 35e8a6311f7444d46b2cb2ec74afdcc0, type: 3}

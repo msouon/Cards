@@ -7,6 +7,8 @@ public class Attack_JiJiRuLvLing_Fire : AttackCardBase
 {
     public int baseDamage = 6;
 
+    public GameObject fireEffectPrefab;
+
     private void OnEnable() { cardType = CardType.Attack; }
 
     public override void ExecuteEffect(Player player, Enemy enemy)
@@ -14,5 +16,7 @@ public class Attack_JiJiRuLvLing_Fire : AttackCardBase
         int dmg = enemy.ApplyElementalAttack(ElementType.Fire, baseDamage, player);
         enemy.TakeDamage(dmg);
         
+         if (fireEffectPrefab != null)
+            GameObject.Instantiate(fireEffectPrefab, enemy.transform.position, Quaternion.identity);
     }
 }

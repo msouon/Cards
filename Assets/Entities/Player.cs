@@ -7,7 +7,9 @@ public class Player : MonoBehaviour
     [Header("�ݩ�")]
     public int maxHP = 50;
     public int currentHP;
-    public int energy = 5;
+    public int maxEnergy = 4;
+    // 當前能量
+    public int energy;
     public int block = 0;
     public int gold = 0;
 
@@ -33,6 +35,8 @@ public class Player : MonoBehaviour
     private void Awake()
     {
         currentHP = maxHP;
+        // 遊戲開始時將能量補滿
+        energy = maxEnergy;
     }
 
     /// <summary>
@@ -41,7 +45,8 @@ public class Player : MonoBehaviour
     public void StartTurn()
     {
         block = 0;  // ���C���ݨD�A�Y�OSLAY THE SPIRE����A�^�X�����|�M��block
-        energy = 5; // ���m��q(�]�i���C���W�h)
+        // 每回合開始時回滿能量
+        energy = maxEnergy;
         hasDiscardedThisTurn = false;
         discardCountThisTurn = 0;
         attackUsedThisTurn = 0;

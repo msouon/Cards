@@ -7,6 +7,8 @@ public class Attack_JiJiRuLvLing_Thunder : AttackCardBase
 {
     public int baseDamage = 6;
 
+    public GameObject thunderEffectPrefab;
+
     private void OnEnable() { cardType = CardType.Attack; }
 
     public override void ExecuteEffect(Player player, Enemy enemy)
@@ -14,5 +16,7 @@ public class Attack_JiJiRuLvLing_Thunder : AttackCardBase
         int dmg = enemy.ApplyElementalAttack(ElementType.Thunder, baseDamage, player);
         enemy.TakeDamage(dmg);
         
+        if (thunderEffectPrefab != null)
+            GameObject.Instantiate(thunderEffectPrefab, enemy.transform.position, Quaternion.identity);
     }
 }

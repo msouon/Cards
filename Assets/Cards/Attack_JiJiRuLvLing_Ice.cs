@@ -7,6 +7,8 @@ public class Attack_JiJiRuLvLing_Ice : AttackCardBase
 {
     public int baseDamage = 6;
 
+    public GameObject iceEffectPrefab;
+
     private void OnEnable() { cardType = CardType.Attack; }
 
     public override void ExecuteEffect(Player player, Enemy enemy)
@@ -26,5 +28,8 @@ public class Attack_JiJiRuLvLing_Ice : AttackCardBase
             }
         }
         
+         if (iceEffectPrefab != null)
+            GameObject.Instantiate(iceEffectPrefab, enemy.transform.position, Quaternion.identity);
+
     }
 }

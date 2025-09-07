@@ -166,6 +166,9 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public void StartPlayerTurn()
     {
+         // 玩家回合開始時，先將能量補滿
+        player.energy = player.maxEnergy;
+        
         foreach (var e in enemies)
         {
             if (e != null)

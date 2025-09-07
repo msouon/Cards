@@ -7,6 +7,8 @@ public class Attack_JiJiRuLvLing_Water : AttackCardBase       // 定義一張水
 {
     public int baseDamage = 6;                                 // 基礎傷害值
 
+    public GameObject waterEffectPrefab;
+
     private void OnEnable() { cardType = CardType.Attack; }    // 腳本啟用時，設定卡牌類型為攻擊
 
     public override void ExecuteEffect(Player player, Enemy enemy)  // 覆寫執行卡牌效果方法
@@ -23,5 +25,9 @@ public class Attack_JiJiRuLvLing_Water : AttackCardBase       // 定義一張水
                 adj.AddElement(ElementType.Water);                 // 在相鄰格子也添加水元素標籤
             }
         }
+
+        if (waterEffectPrefab != null)
+            GameObject.Instantiate(waterEffectPrefab, enemy.transform.position, Quaternion.identity);
+
     }
 }

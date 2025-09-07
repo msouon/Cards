@@ -6,6 +6,8 @@ public class Attack_JiJiRuLvLing_Wood : AttackCardBase        // 木屬性版本
 {
     public int baseDamage = 6;                                 // 基礎傷害值
 
+    public GameObject woodEffectPrefab;
+
     private void OnEnable() { cardType = CardType.Attack; }    // 設定卡牌為攻擊類型
 
     public override void ExecuteEffect(Player player, Enemy enemy)  // 執行效果
@@ -22,5 +24,8 @@ public class Attack_JiJiRuLvLing_Wood : AttackCardBase        // 木屬性版本
                 adj.AddElement(ElementType.Wood);                  // 添加木元素
             }
         }
+
+        if (woodEffectPrefab != null)
+            GameObject.Instantiate(woodEffectPrefab, enemy.transform.position, Quaternion.identity);
     }
 }
