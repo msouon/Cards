@@ -25,4 +25,4 @@ MonoBehaviour:
   - {x: -1, y: 2}
   - {x: 1, y: 2}
   baseDamage: 6
-  woodEffectPrefab: {fileID: 1712395579410472056, guid: 35e8a6311f7444d46b2cb2ec74afdcc0, type: 3}
+  woodEffectPrefab: {fileID: 4707066954145857473, guid: 1ff751b8832b3da42af3757d9d065a97, type: 3}

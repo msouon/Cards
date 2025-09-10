@@ -25,4 +25,4 @@ MonoBehaviour:
   - {x: -1, y: 2}
   - {x: 1, y: 2}
   baseDamage: 6
-  iceEffectPrefab: {fileID: 1555063673904323573, guid: 7f329f119e9b97f48bb55e2374371b2c, type: 3}
+  iceEffectPrefab: {fileID: 4240465587629466036, guid: 22c4e1732c23bbd4c8c7067b948cf6b5, type: 3}

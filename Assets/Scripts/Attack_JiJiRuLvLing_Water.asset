@@ -25,4 +25,4 @@ MonoBehaviour:
   - {x: -1, y: 2}
   - {x: 1, y: 2}
   baseDamage: 6
-  waterEffectPrefab: {fileID: 5950964067626910217, guid: bf91af7e45bf75b49be57280441ee8b8, type: 3}
+  waterEffectPrefab: {fileID: 8461930959180958118, guid: 1e8d195486e9d0340b3ca44c17f86d2d, type: 3}
