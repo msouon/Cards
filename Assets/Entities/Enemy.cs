@@ -32,7 +32,16 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
 
     private HashSet<ElementType> elementTags = new HashSet<ElementType>();  // 元素標籤
 
-        // 移動到指定格子
+    [SerializeField] private Transform spriteRoot;            // 僅包含貼圖的顯示節點
+
+    private Coroutine shakeRoutine;                 // 受擊抖動協程參考
+
+    [Header("受擊抖動設定")]
+    [SerializeField] private float shakeDuration = 0.1f;      // 抖動持續時間
+    [SerializeField] private float shakeMagnitude = 0.1f;     // 初始抖動幅度
+    [SerializeField] private float scaleMultiplier = 1.1f;    // 放大倍率
+
+    // 移動到指定格子
     public void MoveToPosition(Vector2Int targetGridPos)
     {
         Board board = FindObjectOfType<Board>();
@@ -96,8 +105,31 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         bm.OnEnemyClicked(this);                   // 通知 BattleManager 有敵人被點擊
     }
 
+    private IEnumerator HitShake()                 // 受擊抖動效果
+    {
+       Transform root = spriteRoot ? spriteRoot : transform; // 若未指定則退回自身
+        Vector3 originalPos = root.localPosition;
+        Vector3 originalScale = root.localScale;
+        float elapsed = 0f;
+        Vector3 targetScale = originalScale * scaleMultiplier;
+        root.localScale = targetScale;
+        while (elapsed < shakeDuration)
+        {
+            float t = elapsed / shakeDuration;
+            float currentMag = Mathf.Lerp(shakeMagnitude, 0f, t); // 幅度隨時間衰減
+            root.localPosition = originalPos + (Vector3)Random.insideUnitCircle * currentMag;
+            root.localScale = Vector3.Lerp(targetScale, originalScale, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        root.localPosition = originalPos;
+        root.localScale = originalScale;
+    }
+
     public void TakeDamage(int dmg)                // 受到傷害 (考慮格擋)
     {
+        if (shakeRoutine != null) StopCoroutine(shakeRoutine);
+        shakeRoutine = StartCoroutine(HitShake());
         int remain = dmg - block;                 // 計算剩餘傷害
         if (remain > 0)
         {
@@ -117,6 +149,8 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
 
     public void TakeTrueDamage(int dmg)           // 真實傷害 (無視格擋)
     {
+         if (shakeRoutine != null) StopCoroutine(shakeRoutine);
+        shakeRoutine = StartCoroutine(HitShake());
         currentHP -= dmg;                         // 直接扣除生命
         if (currentHP <= 0)
         {
