@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
+[RequireComponent(typeof(CanvasGroup))]
 public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [Header("UI 參考")]
@@ -18,11 +19,24 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     public Transform originalParent;
     private Canvas canvas;     // 用於計算拖曳位移（避免受 Canvas 縮放影響）
     private RectTransform rectTransform;
+    private CanvasGroup canvasGroup;
+
+    [Header("拖曳外觀")]
+    [SerializeField, Range(0f, 1f)]
+    private float draggingAlpha = 0.5f;
+
+    private float originalAlpha = 1f;
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         canvas = FindObjectOfType<Canvas>();
+        canvasGroup = GetComponent<CanvasGroup>();
+
+        if (canvasGroup != null)
+        {
+            originalAlpha = canvasGroup.alpha;
+        }
     }
 
     /// <summary>
@@ -60,6 +74,9 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         originalParent = transform.parent;
         transform.SetParent(FindObjectOfType<Canvas>().transform);
 
+        SetCardAlpha(draggingAlpha);
+
+
         BattleManager bm = FindObjectOfType<BattleManager>();
         if (bm != null)
         {
@@ -82,6 +99,8 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        SetCardAlpha(originalAlpha);
+
         BattleManager bm = FindObjectOfType<BattleManager>();
         Vector2 worldPos = Camera.main.ScreenToWorldPoint(eventData.position);
         Collider2D hit = Physics2D.OverlapPoint(worldPos);
@@ -146,7 +165,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         Collider2D hit = Physics2D.OverlapPoint(worldPos);
 
         // 檢查是否命中 HandPanel（可用 Tag / 名稱 / 專用元件來判斷）
-         if (hit != null)
+        if (hit != null)
         {
             HandPanelMarker handPanel = hit.GetComponent<HandPanelMarker>();
 
@@ -168,6 +187,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     private void ReturnToHand()
     {
+        SetCardAlpha(originalAlpha);
         transform.SetParent(originalParent);
         rectTransform.anchoredPosition = Vector2.zero;
     }
@@ -212,5 +232,13 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             bm.PlayCard(cardData);
         }
         // 後續會由 BattleManager 決定是否移除手牌、更新 UI 等
+    }
+
+     private void SetCardAlpha(float alpha)
+    {
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = alpha;
+        }
     }
 }

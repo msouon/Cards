@@ -21,6 +21,9 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     public Transform handPanel;                           // Inspector 中指定的手牌區域
     public Transform deckPile;                            // Inspector 中指定的牌庫區域
     public Transform discardPile;                         // Inspector 中指定的棄牌堆區域
+
+    public Text energyText;                               // 顯示能量用的文字
+
     public Board board;                                   // Inspector 中指定的棋盤管理器
 
     [Header("Guaranteed Cards")]
@@ -173,7 +176,8 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     {
          // 玩家回合開始時，先將能量補滿
         player.energy = player.maxEnergy;
-        
+        UpdateEnergyUI();
+
         foreach (var e in enemies)
         {
             if (e != null)
@@ -515,6 +519,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public void RefreshHandUI()
     {
+        UpdateEnergyUI();
         // 更新牌庫區文字
         if (deckPile)
         {
@@ -540,6 +545,14 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         }
     }
 
+    private void UpdateEnergyUI()
+    {
+        if (energyText != null && player != null)
+        {
+            energyText.text = $"{player.energy}/{player.maxEnergy}";
+        }
+    }
+    
     /// <summary>
     /// 開始選擇攻擊目標：檢查能量 → 高亮範圍內的敵人
     /// </summary>
