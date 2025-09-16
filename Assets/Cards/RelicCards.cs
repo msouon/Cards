@@ -143,13 +143,24 @@ public class Relic_PoMoXiao : CardBase
             player.DrawCards(1);
             // ��1 (²�Ƭ���̫�@�i)
             CardBase last = null;
-           if (player.Hand.Count > 0)
+            if (player.Hand.Count > 0)
             {
-                last = player.Hand[player.Hand.Count - 1];
-                player.Hand.RemoveAt(player.Hand.Count - 1);
-                player.discardPile.Add(last);
-                player.hasDiscardedThisTurn = true;
-                player.discardCountThisTurn++;
+                BattleManager manager = FindObjectOfType<BattleManager>();
+                for (int i = player.Hand.Count - 1; i >= 0; i--)
+                {
+                    CardBase candidate = player.Hand[i];
+                    if (manager != null && manager.IsGuaranteedMovementCard(candidate))
+                    {
+                        continue;
+                    }
+
+                    last = candidate;
+                    player.Hand.RemoveAt(i);
+                    player.discardPile.Add(last);
+                    player.hasDiscardedThisTurn = true;
+                    player.discardCountThisTurn++;
+                    break;
+                }
             }
             // �Y�󱼪��O�����P => �U�^�X����+1
             if (last != null && last.cardType == CardType.Attack)

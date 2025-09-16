@@ -302,11 +302,22 @@ public class Attack_PianShuTuXi : CardBase
         CardBase lastCard = null;
         if (player.Hand.Count > 0)
         {
-            lastCard = player.Hand[player.Hand.Count - 1];
-            player.Hand.RemoveAt(player.Hand.Count - 1);
-            player.discardPile.Add(lastCard);
-            player.hasDiscardedThisTurn = true;
-            player.discardCountThisTurn++; // �ݽT�O��������
+            BattleManager manager = FindObjectOfType<BattleManager>();
+            for (int i = player.Hand.Count - 1; i >= 0; i--)
+            {
+                CardBase candidate = player.Hand[i];
+                if (manager != null && manager.IsGuaranteedMovementCard(candidate))
+                {
+                    continue;
+                }
+
+                lastCard = candidate;
+                player.Hand.RemoveAt(i);
+                player.discardPile.Add(lastCard);
+                player.hasDiscardedThisTurn = true;
+                player.discardCountThisTurn++; // �ݽT�O��������
+                break;
+            }
         }
 
         // �Y�󱼪��P�O�ޯ�P, �h��ĤH�A�y�� bonusDamage

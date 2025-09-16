@@ -1,3 +1,4 @@
+using System;
 using System.Collections;                                 // 引用非泛型集合
 using System.Collections.Generic;                        // 引用泛型集合
 using Unity.VisualScripting;                             // 引用視覺化腳本功能（若未使用可移除）
@@ -21,6 +22,10 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     public Transform deckPile;                            // Inspector 中指定的牌庫區域
     public Transform discardPile;                         // Inspector 中指定的棄牌堆區域
     public Board board;                                   // Inspector 中指定的棋盤管理器
+
+    [Header("Guaranteed Cards")]
+    public Move_YiDong guaranteedMovementCard;            // 必定發給玩家的移動卡模板
+    private Move_YiDong guaranteedMovementCardInstance;   // 實際放在手牌中的移動卡實例
 
     [Header("Rewards")]
     public List<CardBase> allCardPool = new List<CardBase>();
@@ -115,7 +120,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
         for (int i = 0; i < initialEnemyCount && positions.Count > 0; i++)
         {
-            int idx = Random.Range(0, positions.Count);
+            int idx = UnityEngine.Random.Range(0, positions.Count);
             Vector2Int pos = positions[idx];
             positions.RemoveAt(idx);
 
@@ -179,7 +184,83 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         player.buffs.nextTurnDrawChange = 0;               // 重置下回合抽牌變更
 
         player.DrawNewHand(drawCount);                     // 重新抽牌
+        EnsureMovementCardInHand();                        // 確保手牌中有移動卡
         RefreshHandUI();                                   // 同步手牌 UI
+    }
+
+    private Move_YiDong GetGuaranteedMovementCardInstance()
+    {
+        if (guaranteedMovementCardInstance == null)
+        {
+            if (guaranteedMovementCard == null)
+            {
+                Debug.LogWarning("Guaranteed movement card template is not assigned.");
+                return null;
+            }
+
+            guaranteedMovementCardInstance = Instantiate(guaranteedMovementCard);
+        }
+
+        return guaranteedMovementCardInstance;
+    }
+
+    public bool IsGuaranteedMovementCard(CardBase card)
+    {
+        if (card == null)
+            return false;
+
+        Move_YiDong instance = GetGuaranteedMovementCardInstance();
+        if (instance == null)
+            return false;
+
+        if (ReferenceEquals(card, instance))
+            return true;
+
+        if (guaranteedMovementCard != null && ReferenceEquals(card, guaranteedMovementCard))
+            return true;
+
+        return false;
+    }
+
+    private void RemoveGuaranteedMovementCardFromPiles()
+    {
+        if (player == null) return;
+
+        // 移除所有移動卡模板與實例，避免被計入牌庫與棄牌堆
+        player.deck.RemoveAll(card => card is Move_YiDong);
+        player.discardPile.RemoveAll(card => card is Move_YiDong);
+    }
+
+    private void EnsureMovementCardInHand()
+    {
+        if (player == null) return;
+
+        Move_YiDong movementCard = GetGuaranteedMovementCardInstance();
+        if (movementCard == null) return;
+
+        RemoveGuaranteedMovementCardFromPiles();
+
+        // 移除其他移動卡版本，確保只保留這張保證卡
+        int removedDuplicateCount = 0;
+        for (int i = player.Hand.Count - 1; i >= 0; i--)
+        {
+            CardBase card = player.Hand[i];
+            if (card is Move_YiDong && !ReferenceEquals(card, movementCard))
+            {
+                player.Hand.RemoveAt(i);
+                removedDuplicateCount++;
+            }
+        }
+
+        if (!player.Hand.Contains(movementCard))
+        {
+            player.Hand.Add(movementCard);
+        }
+
+        if (removedDuplicateCount > 0)
+        {
+            player.DrawCards(removedDuplicateCount);
+        }
     }
 
     /// <summary>
@@ -187,8 +268,23 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     private void DiscardAllHand()
     {
+        Move_YiDong movementCard = guaranteedMovementCardInstance;
+        bool hadGuaranteedCard = false;
+
+        if (movementCard != null)
+        {
+            hadGuaranteedCard = player.Hand.Remove(movementCard);
+            // 確保保證卡不會意外留在棄牌堆
+            player.discardPile.Remove(movementCard);
+        }
         player.discardPile.AddRange(player.Hand);          // 全部移入棄牌堆
         player.Hand.Clear();                               // 清空手牌
+        if (hadGuaranteedCard)
+        {
+            player.Hand.Add(movementCard);                 // 保證卡重新回到手牌
+        }
+
+        RemoveGuaranteedMovementCardFromPiles();
         RefreshHandUI();                                   // 更新 UI 顯示
     }
 
@@ -262,10 +358,19 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         }
 
         // 若手牌中仍含此卡，則移至棄牌堆
+        bool isGuaranteedMovement = IsGuaranteedMovementCard(cardData);
         if (player.Hand.Contains(cardData))
         {
-            player.Hand.Remove(cardData);
-            player.discardPile.Add(cardData);
+            if (!isGuaranteedMovement)
+            {
+                player.Hand.Remove(cardData);
+                player.discardPile.Add(cardData);
+            }
+        }
+
+        if (isGuaranteedMovement)
+        {
+            RemoveGuaranteedMovementCardFromPiles();
         }
 
         player.UseEnergy(finalCost);
@@ -381,8 +486,15 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         // 棄掉已使用的移動卡
         if (player.Hand.Contains(currentMovementCard))
         {
-            player.Hand.Remove(currentMovementCard);
-            player.discardPile.Add(currentMovementCard);
+            if (!IsGuaranteedMovementCard(currentMovementCard))
+            {
+                player.Hand.Remove(currentMovementCard);
+                player.discardPile.Add(currentMovementCard);
+            }
+            else
+            {
+                RemoveGuaranteedMovementCardFromPiles();
+            }
         }
 
         isSelectingMovementTile = false;                  // 重置狀態
@@ -535,7 +647,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         List<CardBase> temp = new List<CardBase>(pool);
         for (int i = 0; i < count && temp.Count > 0; i++)
         {
-            int idx = Random.Range(0, temp.Count);
+            int idx = UnityEngine.Random.Range(0, temp.Count);
             result.Add(temp[idx]);
             temp.RemoveAt(idx);
         }

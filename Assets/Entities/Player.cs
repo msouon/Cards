@@ -85,17 +85,18 @@ public class Player : MonoBehaviour
         {
             int n = buffs.needRandomDiscardAtEnd;
             buffs.needRandomDiscardAtEnd = 0;
-            // �H���� n �i
+            BattleManager manager = FindObjectOfType<BattleManager>();
             for (int i = 0; i < n; i++)
             {
-                if (hand.Count > 0)
+                if (TryRemoveDiscardableCardFromHand(manager, true, out CardBase c))
                 {
-                    int idx = Random.Range(0, hand.Count);
-                    CardBase c = hand[idx];
-                    hand.RemoveAt(idx);
                     discardPile.Add(c);
                     hasDiscardedThisTurn = true;
                     discardCountThisTurn++;
+                }
+                else
+                {
+                    break;
                 }
             }
         }
@@ -254,27 +255,84 @@ public class Player : MonoBehaviour
         }
     }
 
+    private bool TryRemoveDiscardableCardFromHand(BattleManager manager, bool randomIndex, out CardBase removedCard)
+    {
+        removedCard = null;
+        if (hand.Count == 0) return false;
+
+        if (manager == null)
+        {
+            int index = randomIndex ? Random.Range(0, hand.Count) : hand.Count - 1;
+            removedCard = hand[index];
+            hand.RemoveAt(index);
+            return true;
+        }
+
+        if (randomIndex)
+        {
+            List<int> candidateIndexes = new List<int>();
+            for (int i = 0; i < hand.Count; i++)
+            {
+                if (!manager.IsGuaranteedMovementCard(hand[i]))
+                {
+                    candidateIndexes.Add(i);
+                }
+            }
+
+            if (candidateIndexes.Count == 0) return false;
+
+            int selectedIndex = candidateIndexes[Random.Range(0, candidateIndexes.Count)];
+            removedCard = hand[selectedIndex];
+            hand.RemoveAt(selectedIndex);
+            return true;
+        }
+
+        for (int i = hand.Count - 1; i >= 0; i--)
+        {
+            CardBase candidate = hand[i];
+            if (!manager.IsGuaranteedMovementCard(candidate))
+            {
+                removedCard = candidate;
+                hand.RemoveAt(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// �� n �i�P (²�ƳB�z: �q��P�̫�X�i���)
     /// </summary>
     public void DiscardCards(int n)
     {
         if (hand.Count < n) n = hand.Count;
+        BattleManager manager = FindObjectOfType<BattleManager>();
+        int actualDiscarded = 0;
         for (int i = 0; i < n; i++)
         {
-            CardBase c = hand[hand.Count - 1];
-            hand.RemoveAt(hand.Count - 1);
-            discardPile.Add(c);
-        }
-        hasDiscardedThisTurn = true;
-        discardCountThisTurn += n;
-
-        // ���j��²Ĳ�o
-        foreach (CardBase r in relics)
-        {
-            if (r is Relic_LunHuiZhuJian zhujian)
+             if (TryRemoveDiscardableCardFromHand(manager, false, out CardBase c))
             {
-                zhujian.OnPlayerDiscard(this, n);
+                discardPile.Add(c);
+                actualDiscarded++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        if (actualDiscarded > 0)
+        {
+            hasDiscardedThisTurn = true;
+            discardCountThisTurn += actualDiscarded;
+
+            // ���j��²Ĳ�o
+            foreach (CardBase r in relics)
+            {
+                if (r is Relic_LunHuiZhuJian zhujian)
+                {
+                    zhujian.OnPlayerDiscard(this, actualDiscarded);
+                }
             }
         }
     }
@@ -284,9 +342,9 @@ public class Player : MonoBehaviour
     /// </summary>
     public bool DiscardOneCard()
     {
-        if (hand.Count == 0) return false;
-        CardBase c = hand[hand.Count - 1];
-        hand.RemoveAt(hand.Count - 1);
+        BattleManager manager = FindObjectOfType<BattleManager>();
+        if (!TryRemoveDiscardableCardFromHand(manager, false, out CardBase c))
+            return false;
         discardPile.Add(c);
 
         hasDiscardedThisTurn = true;
