@@ -361,9 +361,11 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         bool isGuaranteedMovement = IsGuaranteedMovementCard(cardData);
         if (player.Hand.Contains(cardData))
         {
+            player.Hand.Remove(cardData);
+
             if (!isGuaranteedMovement)
             {
-                player.Hand.Remove(cardData);
+
                 player.discardPile.Add(cardData);
             }
         }
@@ -486,9 +488,10 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         // 棄掉已使用的移動卡
         if (player.Hand.Contains(currentMovementCard))
         {
+            player.Hand.Remove(currentMovementCard);
+
             if (!IsGuaranteedMovementCard(currentMovementCard))
             {
-                player.Hand.Remove(currentMovementCard);
                 player.discardPile.Add(currentMovementCard);
             }
             else
