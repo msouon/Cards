@@ -25,6 +25,13 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     [SerializeField, Tooltip("滑鼠懸停時卡片向上移動的距離（UI 座標單位）")]
     private float hoverMoveDistance = 20f;
 
+    [SerializeField, Tooltip("滑鼠懸停時用於顯示的發光圖層（可為額外的 Image 或特效物件）")]
+    private Image hoverGlowImage;
+
+    [SerializeField, Tooltip("滑鼠懸停時的發光顏色")]
+    private Color hoverGlowColor = Color.green;
+
+
     private Vector2 originalAnchoredPosition;
     private bool isDragging;
     private bool isHovering;
@@ -40,6 +47,12 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         if (canvasGroup != null)
         {
             originalAlpha = canvasGroup.alpha;
+        }
+
+        if (hoverGlowImage != null)
+        {
+            hoverGlowImage.gameObject.SetActive(false);
+            hoverGlowImage.color = hoverGlowColor;
         }
 
     }
@@ -155,6 +168,8 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         rectTransform.anchoredPosition = originalAnchoredPosition + Vector2.up * hoverMoveDistance;
         isHovering = true;
 
+        SetHoverGlowVisible(true);
+
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -206,6 +221,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         originalAnchoredPosition = rectTransform.anchoredPosition;
         isDragging = false;
         isHovering = false;
+        SetHoverGlowVisible(false);
     }
 
     /// <summary>
@@ -257,7 +273,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             canvasGroup.alpha = alpha;
         }
     }
-    
+
     private void ResetHoverPosition()
     {
         if (!isHovering)
@@ -267,5 +283,25 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         rectTransform.anchoredPosition = originalAnchoredPosition;
         isHovering = false;
+        
+         SetHoverGlowVisible(false);
+    }
+
+    private void SetHoverGlowVisible(bool visible)
+    {
+        if (hoverGlowImage != null)
+        {
+            hoverGlowImage.gameObject.SetActive(visible);
+        }
+    }
+
+    public void SetHoverGlowColor(Color color)
+    {
+        hoverGlowColor = color;
+
+        if (hoverGlowImage != null)
+        {
+            hoverGlowImage.color = color;
+        }
     }
 }
