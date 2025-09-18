@@ -6,11 +6,7 @@ using UnityEngine.EventSystems;
 public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI 參考")]
-    public Text cardNameText;
-    public Text costText;
-    public Text descriptionText;
     public Image cardImage;
-    public Image cardBackground;
 
     [Header("資料參考")]
     public CardBase cardData; // 對應卡片資料的 ScriptableObject
@@ -28,21 +24,10 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     [Header("滑鼠懸停效果")]
     [SerializeField, Tooltip("滑鼠懸停時卡片向上移動的距離（UI 座標單位）")]
     private float hoverMoveDistance = 20f;
-    [SerializeField, Tooltip("滑鼠懸停時的發光顏色")]
-    private Color hoverGlowColor = new Color(1f, 1f, 1f, 0.6f);
-
-    [SerializeField, Tooltip("滑鼠懸停時發光外框的粗細（像素）")]
-    private float hoverGlowPadding = 16f;
 
     private Vector2 originalAnchoredPosition;
     private bool isDragging;
     private bool isHovering;
-
-    private Outline hoverGlowOutline;
-    private Color originalGlowColor;
-    private Vector2 originalGlowDistance;
-    private bool originalGlowEnabled;
-    private bool originalGlowUseGraphicAlpha;
 
 
     private void Awake()
@@ -57,7 +42,6 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             originalAlpha = canvasGroup.alpha;
         }
 
-        SetupHoverGlow();
     }
 
     /// <summary>
@@ -66,27 +50,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     public void SetupCard(CardBase data)
     {
         cardData = data;
-        if (cardNameText) cardNameText.text = data.cardName;
-        if (costText) costText.text = data.cost.ToString();
-        if (descriptionText) descriptionText.text = data.description;
         if (cardImage && data.cardImage) cardImage.sprite = data.cardImage;
-
-        // 並依據 cardType 設定背景顏色
-        switch (data.cardType)
-        {
-            case CardType.Attack:
-                if (cardBackground) cardBackground.color = Color.red;
-                break;
-            case CardType.Skill:
-                if (cardBackground) cardBackground.color = Color.blue;
-                break;
-            case CardType.Movement:
-                if (cardBackground) cardBackground.color = Color.green;
-                break;
-            case CardType.Relic:
-                if (cardBackground) cardBackground.color = Color.yellow;
-                break;
-        }
     }
 
     #region 拖曳事件
@@ -94,7 +58,6 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     {
         isDragging = true;
         ResetHoverPosition();
-        DisableHoverGlow();
 
         originalParent = transform.parent;
         transform.SetParent(FindObjectOfType<Canvas>().transform);
@@ -192,7 +155,6 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         rectTransform.anchoredPosition = originalAnchoredPosition + Vector2.up * hoverMoveDistance;
         isHovering = true;
 
-        EnableHoverGlow();
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -203,7 +165,6 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         }
 
         ResetHoverPosition();
-        DisableHoverGlow();
     }
 
     // 攻擊牌：若拖到 Enemy 上會觸發使用；否則還原到手牌
@@ -245,7 +206,6 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         originalAnchoredPosition = rectTransform.anchoredPosition;
         isDragging = false;
         isHovering = false;
-        DisableHoverGlow();
     }
 
     /// <summary>
@@ -307,59 +267,5 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         rectTransform.anchoredPosition = originalAnchoredPosition;
         isHovering = false;
-    }
-
-    private void EnableHoverGlow()
-    {
-        if (hoverGlowOutline == null)
-        {
-            return;
-        }
-
-        hoverGlowOutline.useGraphicAlpha = false;
-        hoverGlowOutline.effectColor = hoverGlowColor;
-        hoverGlowOutline.effectDistance = Vector2.one * hoverGlowPadding;
-        hoverGlowOutline.enabled = true;
-    }
-
-    private void DisableHoverGlow()
-    {
-        if (hoverGlowOutline == null)
-        {
-            return;
-        }
-
-        hoverGlowOutline.effectColor = originalGlowColor;
-        hoverGlowOutline.effectDistance = originalGlowDistance;
-        hoverGlowOutline.useGraphicAlpha = originalGlowUseGraphicAlpha;
-        hoverGlowOutline.enabled = originalGlowEnabled;
-    }
-
-    private void SetupHoverGlow()
-    {
-        if (cardBackground == null)
-        {
-            return;
-        }
-
-        hoverGlowOutline = cardBackground.GetComponent<Outline>();
-        if (hoverGlowOutline == null)
-        {
-            hoverGlowOutline = cardBackground.gameObject.AddComponent<Outline>();
-            hoverGlowOutline.effectColor = new Color(hoverGlowColor.r, hoverGlowColor.g, hoverGlowColor.b, 0f);
-            hoverGlowOutline.effectDistance = Vector2.zero;
-            hoverGlowOutline.useGraphicAlpha = false;
-        }
-
-        originalGlowColor = hoverGlowOutline.effectColor;
-        originalGlowDistance = hoverGlowOutline.effectDistance;
-        originalGlowEnabled = hoverGlowOutline.enabled;
-        originalGlowUseGraphicAlpha = hoverGlowOutline.useGraphicAlpha;
-
-        if (!originalGlowEnabled)
-        {
-            hoverGlowOutline.enabled = false;
-        }
-
     }
 }
