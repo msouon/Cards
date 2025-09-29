@@ -14,6 +14,9 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     private Canvas canvas;     // 用於計算拖曳位移（避免受 Canvas 縮放影響）
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
+    private Transform canvasRoot;
+    private BattleManager battleManager;
+    private Camera mainCamera;
 
     [Header("拖曳外觀")]
     [SerializeField, Range(0f, 1f)]
@@ -40,8 +43,15 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
-        canvas = FindObjectOfType<Canvas>();
+        canvas = GetComponentInParent<Canvas>();
+        if (canvas == null)
+        {
+            canvas = FindObjectOfType<Canvas>();
+        }
+        canvasRoot = canvas != null ? canvas.transform : null;
         canvasGroup = GetComponent<CanvasGroup>();
+        battleManager = FindObjectOfType<BattleManager>();
+        mainCamera = Camera.main;
         originalAnchoredPosition = rectTransform.anchoredPosition;
 
         if (canvasGroup != null)
@@ -63,7 +73,10 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     public void SetupCard(CardBase data)
     {
         cardData = data;
-        if (cardImage && data.cardImage) cardImage.sprite = data.cardImage;
+        if (cardImage != null && data != null && data.cardImage != null)
+        {
+            cardImage.sprite = data.cardImage;
+        }
     }
 
     #region 拖曳事件
@@ -73,21 +86,24 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         ResetHoverPosition();
 
         originalParent = transform.parent;
-        transform.SetParent(FindObjectOfType<Canvas>().transform);
+        if (canvasRoot != null)
+        {
+            transform.SetParent(canvasRoot);
+        }
+
 
         SetCardAlpha(draggingAlpha);
 
 
-        BattleManager bm = FindObjectOfType<BattleManager>();
-        if (bm != null)
+        if (battleManager != null && cardData != null)
         {
             if (cardData.cardType == CardType.Attack)
             {
-                bm.StartAttackSelect(cardData);
+                battleManager.StartAttackSelect(cardData);
             }
             else if (cardData.cardType == CardType.Movement)
             {
-                bm.UseMovementCard(cardData);
+                battleManager.UseMovementCard(cardData);
             }
         }
     }
@@ -95,7 +111,8 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     public void OnDrag(PointerEventData eventData)
     {
         // 以 Canvas 的 scaleFactor 校正拖曳位移，避免縮放造成位移過大/過小
-        rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        float scaleFactor = canvas != null ? canvas.scaleFactor : 1f;
+        rectTransform.anchoredPosition += eventData.delta / scaleFactor;
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -104,44 +121,22 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         SetCardAlpha(originalAlpha);
 
-        BattleManager bm = FindObjectOfType<BattleManager>();
-        Vector2 worldPos = Camera.main.ScreenToWorldPoint(eventData.position);
+        Camera targetCamera = mainCamera != null ? mainCamera : Camera.main;
+        Vector2 worldPos = targetCamera != null
+            ? targetCamera.ScreenToWorldPoint(eventData.position)
+            : eventData.position;
         Collider2D hit = Physics2D.OverlapPoint(worldPos);
         bool used = false;
 
-        if (bm != null)
+        if (battleManager != null && cardData != null)
         {
             if (cardData.cardType == CardType.Attack)
             {
-                // 攻擊牌：若拖放到 Enemy 上就觸發使用，否則結束選取
-                if (hit != null)
-                {
-                    Enemy e = hit.GetComponent<Enemy>();
-                    if (e != null)
-                    {
-                        used = bm.OnEnemyClicked(e);
-                    }
-                }
-                if (!used)
-                {
-                    bm.EndAttackSelect();
-                }
+                used = HandleAttackDrop(hit);
             }
             else if (cardData.cardType == CardType.Movement)
             {
-                // 移動牌：若拖放到 BoardTile 上就觸發使用，否則取消移動選取
-                if (hit != null)
-                {
-                    BoardTile tile = hit.GetComponent<BoardTile>();
-                    if (tile != null)
-                    {
-                        used = bm.OnTileClicked(tile);
-                    }
-                }
-                if (!used)
-                {
-                    bm.CancelMovementSelection();
-                }
+                used = HandleMovementDrop(hit);
             }
         }
 
@@ -187,83 +182,18 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     // 移動牌：不需要刻意拖回手牌，會直接進入可選移動格流程
     // 若偵測到是 HandPanel，則直接復位到手牌
-    private void HandleMovementCard(PointerEventData eventData)
-    {
-        Vector2 worldPos = Camera.main.ScreenToWorldPoint(eventData.position);
-        Collider2D hit = Physics2D.OverlapPoint(worldPos);
-
-        // 檢查是否命中 HandPanel（可用 Tag / 名稱 / 專用元件來判斷）
-        if (hit != null)
-        {
-            HandPanelMarker handPanel = hit.GetComponent<HandPanelMarker>();
-
-            if (handPanel != null)
-            {
-                // 命中 HandPanel => 回到手牌
-                ReturnToHand();
-                return;
-            }
-        }
-
-        // 若不是 HandPanel => 觸發移動牌流程
-        BattleManager bm = FindObjectOfType<BattleManager>();
-        bm.UseMovementCard(cardData); // 進入可選擇的可達 Tile 流程
-
-        // 同步 UI 狀態（例如：從手牌移除、扣除能量等）
-        Destroy(gameObject);
-    }
-
     private void ReturnToHand()
     {
         SetCardAlpha(originalAlpha);
-        transform.SetParent(originalParent);
+        if (originalParent != null)
+        {
+            transform.SetParent(originalParent);
+        }
         rectTransform.anchoredPosition = Vector2.zero;
         originalAnchoredPosition = rectTransform.anchoredPosition;
         isDragging = false;
         isHovering = false;
         SetHoverGlowVisible(false);
-    }
-
-    /// <summary>
-    /// 檢查拖放結束時的目標（敵人 / 地板格 / 其他）
-    /// </summary>
-    private void CheckDropTarget(PointerEventData eventData)
-    {
-        // 可選：用 UI 的 GraphicRaycaster 或 2D 物理 Raycast
-        // 判斷邏輯：
-        //   - 若指到 Enemy UI／碰撞體 => 視為對敵人使用
-        //   - 若指到 Board Tile => 視為移動
-        //   - 否則 => 還原到手牌
-        RaycastHit2D hit2D = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(eventData.position), Vector2.zero);
-        if (hit2D.collider != null)
-        {
-            // 檢查是否為 Enemy
-            Enemy e = hit2D.collider.GetComponent<Enemy>();
-            if (e != null)
-            {
-                // 對目標使用卡片（造成傷害 / 指定目標等）
-                UseCardOnEnemy(e);
-                return;
-            }
-        }
-
-        // 若沒有命中可用目標 => 還原到手牌
-        transform.SetParent(originalParent);
-        rectTransform.anchoredPosition = Vector2.zero;
-    }
-
-    /// <summary>
-    /// 對指定的敵人使用此卡
-    /// </summary>
-    private void UseCardOnEnemy(Enemy enemyTarget)
-    {
-        // 交給 BattleManager 處理「PlayCard」的實際效果
-        BattleManager bm = FindObjectOfType<BattleManager>();
-        if (bm != null)
-        {
-            bm.PlayCard(cardData);
-        }
-        // 後續會由 BattleManager 決定是否移除手牌、更新 UI 等
     }
 
     private void SetCardAlpha(float alpha)
@@ -283,8 +213,8 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         rectTransform.anchoredPosition = originalAnchoredPosition;
         isHovering = false;
-        
-         SetHoverGlowVisible(false);
+
+        SetHoverGlowVisible(false);
     }
 
     private void SetHoverGlowVisible(bool visible)
@@ -303,5 +233,38 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         {
             hoverGlowImage.color = color;
         }
+    }
+    
+    private bool HandleAttackDrop(Collider2D hit)
+    {
+        if (hit != null)
+        {
+            Enemy enemy;
+            if (hit.TryGetComponent(out enemy))
+            {
+                if (battleManager.OnEnemyClicked(enemy))
+                {
+                    return true;
+                }
+            }
+        }
+
+        battleManager.EndAttackSelect();
+        return false;
+    }
+
+    private bool HandleMovementDrop(Collider2D hit)
+    {
+        if (hit != null)
+        {
+            BoardTile tile;
+            if (hit.TryGetComponent(out tile))
+            {
+                return battleManager.OnTileClicked(tile);
+            }
+        }
+
+        battleManager.CancelMovementSelection();
+        return false;
     }
 }
