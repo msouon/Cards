@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using DG.Tweening;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
@@ -34,92 +35,156 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     [SerializeField, Tooltip("滑鼠懸停時的發光顏色")]
     private Color hoverGlowColor = Color.green;
 
-
     private Vector2 originalAnchoredPosition;
     private bool isDragging;
     private bool isHovering;
+    private int originalSiblingIndex;
 
+    [Header("DOTween 設定")]
+    [SerializeField]
+    private float hoverMoveDuration = 0.2f;
+
+    [SerializeField]
+    private float returnMoveDuration = 0.2f;
+
+    [SerializeField]
+    private Ease hoverMoveEase = Ease.OutQuad;
+
+    [SerializeField]
+    private Ease returnMoveEase = Ease.InOutQuad;
+
+    [SerializeField]
+    private float fadeDuration = 0.15f;
+
+    [SerializeField]
+    private float hoverGlowFadeDuration = 0.2f;
+
+    [Header("Layout（可選）")]
+    [SerializeField] private LayoutElement layoutElement;
+
+    [Header("互動權限")]
+    [SerializeField] private bool interactable = true;
+
+    private Tweener positionTween;
+    private Tweener alphaTween;
+    private Tweener hoverGlowTween;
+    private bool suppressNextHover;
+
+    private void OnDisable()
+    {
+        if (positionTween != null) { positionTween.Kill(); positionTween = null; }
+        if (hoverGlowTween != null){ hoverGlowTween.Kill(); hoverGlowTween = null; }
+        if (alphaTween != null)    { alphaTween.Kill();    alphaTween = null; }
+    }
 
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
-        if (canvas == null)
-        {
-            canvas = FindObjectOfType<Canvas>();
-        }
+        if (canvas == null) canvas = FindObjectOfType<Canvas>();
         canvasRoot = canvas != null ? canvas.transform : null;
         canvasGroup = GetComponent<CanvasGroup>();
         battleManager = FindObjectOfType<BattleManager>();
         mainCamera = Camera.main;
+        originalParent = transform.parent;
         originalAnchoredPosition = rectTransform.anchoredPosition;
 
         if (canvasGroup != null)
-        {
             originalAlpha = canvasGroup.alpha;
-        }
 
         if (hoverGlowImage != null)
         {
+            var color = hoverGlowColor; color.a = 0f;
+            hoverGlowImage.color = color;
             hoverGlowImage.gameObject.SetActive(false);
-            hoverGlowImage.color = hoverGlowColor;
+            hoverGlowImage.raycastTarget = false; // 避免透明時攔 UI 射線
         }
 
+        if (layoutElement == null) layoutElement = GetComponent<LayoutElement>();
     }
 
-    /// <summary>
-    /// 設定卡片顯示內容
-    /// </summary>
+    private void OnEnable()
+    {
+        suppressNextHover = false;
+
+        // ★ 啟用當下，與 BattleManager 的鎖定旗標同步（保險）
+        if (battleManager == null) battleManager = FindObjectOfType<BattleManager>();
+        if (battleManager != null) SetInteractable(!battleManager.IsCardInteractionLocked);
+
+        if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
+        if (rectTransform == null) return;
+
+        Camera targetCamera = mainCamera != null ? mainCamera : Camera.main;
+        if (EventSystem.current != null &&
+            RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition, targetCamera))
+        {
+            suppressNextHover = true; // 啟用當幀滑鼠在上方，不觸發 hover
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (rectTransform == null) return;
+
+        bool isResting = !isDragging && !isHovering && (positionTween == null || !positionTween.IsActive());
+        if (!isResting) return;
+
+        Vector2 currentPosition = rectTransform.anchoredPosition;
+        if (currentPosition != originalAnchoredPosition)
+            originalAnchoredPosition = currentPosition;
+    }
+
+    /// <summary>設定卡片顯示內容</summary>
     public void SetupCard(CardBase data)
     {
         cardData = data;
         if (cardImage != null && data != null && data.cardImage != null)
-        {
             cardImage.sprite = data.cardImage;
-        }
     }
 
     #region 拖曳事件
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (!interactable) return;
+
         isDragging = true;
-        ResetHoverPosition();
+        ResetHoverPosition(true);
 
         originalParent = transform.parent;
-        if (canvasRoot != null)
-        {
-            transform.SetParent(canvasRoot);
-        }
+        originalSiblingIndex = transform.GetSiblingIndex();
+        originalAnchoredPosition = rectTransform.anchoredPosition;
 
+        if (layoutElement != null) layoutElement.ignoreLayout = true; // 暫時脫離 Layout
 
-        SetCardAlpha(draggingAlpha);
+        if (canvasRoot != null) transform.SetParent(canvasRoot, true);
 
+        FadeCardAlpha(draggingAlpha);
 
         if (battleManager != null && cardData != null)
         {
             if (cardData.cardType == CardType.Attack)
-            {
                 battleManager.StartAttackSelect(cardData);
-            }
             else if (cardData.cardType == CardType.Movement)
-            {
                 battleManager.UseMovementCard(cardData);
-            }
         }
+
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = false; // 避免擋住 Drop
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        // 以 Canvas 的 scaleFactor 校正拖曳位移，避免縮放造成位移過大/過小
+        if (!interactable) return;
         float scaleFactor = canvas != null ? canvas.scaleFactor : 1f;
         rectTransform.anchoredPosition += eventData.delta / scaleFactor;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        isDragging = false;
+        if (!interactable) return;
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
 
-        SetCardAlpha(originalAlpha);
+        isDragging = false;
+        FadeCardAlpha(originalAlpha);
 
         Camera targetCamera = mainCamera != null ? mainCamera : Camera.main;
         Vector2 worldPos = targetCamera != null
@@ -131,18 +196,14 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         if (battleManager != null && cardData != null)
         {
             if (cardData.cardType == CardType.Attack)
-            {
                 used = HandleAttackDrop(hit);
-            }
             else if (cardData.cardType == CardType.Movement)
-            {
                 used = HandleMovementDrop(hit);
-            }
         }
 
-        // 使用成功就把這張卡片的 UI 移除；未使用則回到手牌
         if (used)
         {
+            if (layoutElement != null) layoutElement.ignoreLayout = false;
             Destroy(gameObject);
         }
         else
@@ -154,75 +215,133 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (isDragging)
-        {
-            return;
-        }
+        if (isDragging || !interactable) return;
 
-        originalAnchoredPosition = rectTransform.anchoredPosition;
-        rectTransform.anchoredPosition = originalAnchoredPosition + Vector2.up * hoverMoveDistance;
+        if (suppressNextHover) { suppressNextHover = false; return; }
+
+        Vector2 targetPosition = originalAnchoredPosition + Vector2.up * hoverMoveDistance;
+        TweenCardPosition(targetPosition, hoverMoveDuration, hoverMoveEase);
         isHovering = true;
-
         SetHoverGlowVisible(true);
-
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (isDragging)
-        {
-            return;
-        }
+        if (isDragging) return;
 
+        suppressNextHover = false;
         ResetHoverPosition();
     }
 
-    // 攻擊牌：若拖到 Enemy 上會觸發使用；否則還原到手牌
-    // （此備註對應上方 OnEndDrag 的行為說明）
+    private Tweener TweenCardPosition(Vector2 targetPosition, float duration, Ease ease)
+    {
+        if (rectTransform == null) return null;
 
-    // 移動牌：不需要刻意拖回手牌，會直接進入可選移動格流程
-    // 若偵測到是 HandPanel，則直接復位到手牌
+        if (positionTween != null) { positionTween.Kill(); positionTween = null; }
+
+        if (duration <= 0f)
+        {
+            rectTransform.anchoredPosition = targetPosition;
+            return null;
+        }
+
+        positionTween = rectTransform
+            .DOAnchorPos(targetPosition, duration)
+            .SetEase(ease)
+            .SetUpdate(true)
+            .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+            .OnKill(() => positionTween = null);
+        return positionTween;
+    }
+
     private void ReturnToHand()
     {
-        SetCardAlpha(originalAlpha);
+        FadeCardAlpha(originalAlpha);
+
         if (originalParent != null)
         {
-            transform.SetParent(originalParent);
+            transform.SetParent(originalParent, true);
+            transform.SetSiblingIndex(originalSiblingIndex);
         }
-        rectTransform.anchoredPosition = Vector2.zero;
-        originalAnchoredPosition = rectTransform.anchoredPosition;
+
+        Vector2 targetPosition = originalAnchoredPosition;
+
+        var returnTween = TweenCardPosition(targetPosition, returnMoveDuration, returnMoveEase);
+        if (returnTween != null)
+            returnTween.OnComplete(() => originalAnchoredPosition = rectTransform.anchoredPosition);
+        else
+            originalAnchoredPosition = rectTransform.anchoredPosition;
+
+        if (layoutElement != null) layoutElement.ignoreLayout = false;
+
         isDragging = false;
         isHovering = false;
         SetHoverGlowVisible(false);
     }
 
-    private void SetCardAlpha(float alpha)
+    private void FadeCardAlpha(float alpha, bool instant = false)
     {
-        if (canvasGroup != null)
+        if (canvasGroup == null) return;
+
+        if (alphaTween != null) { alphaTween.Kill(); alphaTween = null; }
+
+        if (instant || fadeDuration <= 0f)
         {
             canvasGroup.alpha = alpha;
-        }
-    }
-
-    private void ResetHoverPosition()
-    {
-        if (!isHovering)
-        {
             return;
         }
 
-        rectTransform.anchoredPosition = originalAnchoredPosition;
-        isHovering = false;
-
-        SetHoverGlowVisible(false);
+        alphaTween = canvasGroup
+            .DOFade(alpha, fadeDuration)
+            .SetUpdate(true)
+            .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+            .OnKill(() => alphaTween = null);
     }
 
-    private void SetHoverGlowVisible(bool visible)
+    private void OnDestroy()
     {
-        if (hoverGlowImage != null)
+        if (positionTween != null) { positionTween.Kill(); positionTween = null; }
+        if (alphaTween != null)    { alphaTween.Kill();    alphaTween = null; }
+        if (hoverGlowTween != null){ hoverGlowTween.Kill();hoverGlowTween = null; }
+    }
+
+    private void ResetHoverPosition(bool instant = false)
+    {
+        TweenCardPosition(originalAnchoredPosition, instant ? 0f : returnMoveDuration, returnMoveEase);
+
+        if (isHovering || instant)
         {
-            hoverGlowImage.gameObject.SetActive(visible);
+            isHovering = false;
+            SetHoverGlowVisible(false, instant);
         }
+    }
+
+    private void SetHoverGlowVisible(bool visible, bool instant = false)
+    {
+        if (hoverGlowImage == null) return;
+
+        if (hoverGlowTween != null) { hoverGlowTween.Kill(); hoverGlowTween = null; }
+
+        if (visible) hoverGlowImage.gameObject.SetActive(true);
+
+        float targetAlpha = visible ? 1f : 0f;
+
+        if (instant || hoverGlowFadeDuration <= 0f)
+        {
+            var color = hoverGlowImage.color;
+            color.a = targetAlpha;
+            hoverGlowImage.color = color;
+            if (!visible) hoverGlowImage.gameObject.SetActive(false);
+            return;
+        }
+
+        hoverGlowTween = hoverGlowImage
+            .DOFade(targetAlpha, hoverGlowFadeDuration)
+            .SetEase(Ease.OutQuad)
+            .SetUpdate(true)
+            .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+            .OnKill(() => hoverGlowTween = null)
+            .OnComplete(() => { if (!visible) hoverGlowImage.gameObject.SetActive(false); });
     }
 
     public void SetHoverGlowColor(Color color)
@@ -231,10 +350,37 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         if (hoverGlowImage != null)
         {
+            var current = hoverGlowImage.color;
+            color.a = current.a;
             hoverGlowImage.color = color;
         }
     }
-    
+
+    // 公開 API：回合輪替時一鍵收尾 & 重綁手牌
+    public void ForceResetToHand(Transform newHandParent = null)
+    {
+        positionTween?.Kill(); positionTween = null;
+        hoverGlowTween?.Kill(); hoverGlowTween = null;
+        alphaTween?.Kill();     alphaTween = null;
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = originalAlpha;
+            canvasGroup.blocksRaycasts = true;
+        }
+        SetHoverGlowVisible(false, instant: true);
+        isDragging = false; isHovering = false;
+
+        if (newHandParent != null) originalParent = newHandParent;
+        if (originalParent != null) transform.SetParent(originalParent, true);
+        if (layoutElement != null) layoutElement.ignoreLayout = false;
+
+        rectTransform.anchoredPosition = Vector2.zero;
+        originalAnchoredPosition = Vector2.zero;
+    }
+
+    public void SetInteractable(bool value) => interactable = value;
+
     private bool HandleAttackDrop(Collider2D hit)
     {
         if (hit != null)
@@ -243,12 +389,9 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             if (hit.TryGetComponent(out enemy))
             {
                 if (battleManager.OnEnemyClicked(enemy))
-                {
                     return true;
-                }
             }
         }
-
         battleManager.EndAttackSelect();
         return false;
     }
@@ -259,11 +402,8 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         {
             BoardTile tile;
             if (hit.TryGetComponent(out tile))
-            {
                 return battleManager.OnTileClicked(tile);
-            }
         }
-
         battleManager.CancelMovementSelection();
         return false;
     }

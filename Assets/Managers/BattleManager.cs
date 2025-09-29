@@ -57,6 +57,10 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     // 被高亮的格子列表，用於移動選擇階段
     private List<BoardTile> highlightedTiles = new List<BoardTile>();
 
+     public float cardUseDelay = 1f;               // 玩家回合開始後，延遲幾秒才能操作卡牌
+    private bool _cardInteractionLocked = false;  // 全域鎖定旗標
+    public bool IsCardInteractionLocked => _cardInteractionLocked;
+    
     void Start()
     {
         StartCoroutine(GameStartRoutine());
@@ -174,24 +178,50 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public void StartPlayerTurn()
     {
-         // 玩家回合開始時，先將能量補滿
+        // ★ 打開鎖定旗標：任何新舊卡都應該被鎖
+        _cardInteractionLocked = true;
+
+        // 玩家回合開始：補滿能量（保留）
         player.energy = player.maxEnergy;
         UpdateEnergyUI();
 
+        // 敵人回合開始效果（保留）
         foreach (var e in enemies)
         {
             if (e != null)
-                e.ProcessTurnStart();                     // 敵人回合開始效果
+                e.ProcessTurnStart();
         }
-        int drawCount = player.baseHandCardCount + player.buffs.nextTurnDrawChange;  // 依玩家設定計算抽牌數量
-        drawCount = Mathf.Max(0, drawCount);               // 確保不為負
-        player.buffs.nextTurnDrawChange = 0;               // 重置下回合抽牌變更
 
-        player.DrawNewHand(drawCount);                     // 重新抽牌
-        EnsureMovementCardInHand();                        // 確保手牌中有移動卡
-        RefreshHandUI();                                   // 同步手牌 UI
+        // 計算抽牌數（保留）
+        int drawCount = player.baseHandCardCount + player.buffs.nextTurnDrawChange;
+        drawCount = Mathf.Max(0, drawCount);
+        player.buffs.nextTurnDrawChange = 0;
+
+        // 重新抽牌 / 保證移動卡 / 刷新 UI（保留）
+        player.DrawNewHand(drawCount);
+        EnsureMovementCardInHand();
+        RefreshHandUI(); // ★ 這裡會生成新的 CardUI
+
+        // ★ 立刻把「鎖定狀態」套到目前場上所有卡（包含剛生成的）
+        ApplyInteractableToAllCards(false);
+
+        // ★ 延遲幾秒後再解鎖
+        StartCoroutine(EnableCardsAfterDelay(cardUseDelay));
     }
 
+    private void ApplyInteractableToAllCards(bool value)
+    {
+        var cards = FindObjectsOfType<CardUI>();
+        for (int i = 0; i < cards.Length; i++)
+            cards[i].SetInteractable(value);
+    }
+
+    private IEnumerator EnableCardsAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+         _cardInteractionLocked = false;
+        ApplyInteractableToAllCards(true);
+    }
     private Move_YiDong GetGuaranteedMovementCardInstance()
     {
         if (guaranteedMovementCardInstance == null)
@@ -520,28 +550,36 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     public void RefreshHandUI()
     {
         UpdateEnergyUI();
-        // 更新牌庫區文字
+        // 牌庫 / 棄牌數量（有 UI 就保留，沒有就可刪）
         if (deckPile)
         {
-            Text t = deckPile.GetComponentInChildren<Text>();
-            if (t) t.text = "牌庫區: " + player.deck.Count;
+            var t = deckPile.GetComponentInChildren<UnityEngine.UI.Text>();
+            if (t) t.text = $"牌庫區: {player.deck.Count}";
         }
-        // 更新棄牌區文字
         if (discardPile)
         {
-            Text t2 = discardPile.GetComponentInChildren<Text>();
-            if (t2) t2.text = "棄牌區: " + player.discardPile.Count;
+            var t2 = discardPile.GetComponentInChildren<UnityEngine.UI.Text>();
+            if (t2) t2.text = $"棄牌區: {player.discardPile.Count}";
         }
-        // 清空原本的手牌 UI
-        foreach (Transform child in handPanel)
-            Destroy(child.gameObject);
+
+        // 清空原本的手牌 UI（用反向 for 比 foreach 更安全）
+        for (int i = handPanel.childCount - 1; i >= 0; i--)
+        {
+            Destroy(handPanel.GetChild(i).gameObject);
+        }
 
         // 依手牌資料重新生成卡牌 UI
         foreach (var cardData in player.Hand)
         {
             GameObject cardObj = Instantiate(cardPrefab, handPanel);
-            CardUI cardUI = cardObj.GetComponent<CardUI>();
+            var cardUI = cardObj.GetComponent<CardUI>();
             cardUI.SetupCard(cardData);
+
+            // ★ 關鍵：新卡一生成就依旗標套用互動狀態（延遲期間要鎖住）
+            cardUI.SetInteractable(!_cardInteractionLocked);
+
+            // （選配但推薦）把位置/狀態歸零交給 Layout，避免殘留
+            cardUI.ForceResetToHand(handPanel);
         }
     }
 
