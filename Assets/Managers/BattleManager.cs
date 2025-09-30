@@ -24,6 +24,9 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
     public Text energyText;                               // 顯示能量用的文字
 
+    [Header("UI References")]
+    [SerializeField] private Button endTurnButton;        // 玩家結束回合按鈕
+    
     public Board board;                                   // Inspector 中指定的棋盤管理器
 
     [Header("Guaranteed Cards")]
@@ -61,6 +64,11 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     private bool _cardInteractionLocked = false;  // 全域鎖定旗標
     public bool IsCardInteractionLocked => _cardInteractionLocked;
     
+    void Awake()
+    {
+        SetEndTurnButtonInteractable(false);
+    }
+
     void Start()
     {
         StartCoroutine(GameStartRoutine());
@@ -75,6 +83,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         enemies = new List<Enemy>(FindObjectsOfType<Enemy>());  // 收集場上的敵人
         stateMachine.ChangeState(new PlayerTurnState(this));
         battleStarted = true;                                  // 完成初始設定後才開始判定勝利
+        SetEndTurnButtonInteractable(true);
     }
 
     private IEnumerator SelectPlayerStartTile()
@@ -166,6 +175,10 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public void EndPlayerTurn()
     {
+        if (!battleStarted || !(stateMachine.Current is PlayerTurnState))
+            return;
+
+        SetEndTurnButtonInteractable(false);
         DiscardAllHand();                                 // 棄掉所有手牌
 
         player.EndTurn();
@@ -180,6 +193,9 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     {
         // ★ 打開鎖定旗標：任何新舊卡都應該被鎖
         _cardInteractionLocked = true;
+
+        if (battleStarted)
+            SetEndTurnButtonInteractable(true);
 
         // 玩家回合開始：補滿能量（保留）
         player.energy = player.maxEnergy;
@@ -221,6 +237,12 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         yield return new WaitForSeconds(delay);
          _cardInteractionLocked = false;
         ApplyInteractableToAllCards(true);
+    }
+
+    private void SetEndTurnButtonInteractable(bool value)
+    {
+        if (endTurnButton != null)
+            endTurnButton.interactable = value;
     }
     private Move_YiDong GetGuaranteedMovementCardInstance()
     {

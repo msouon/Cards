@@ -21,13 +21,6 @@ public class PlayerTurnState : BattleState
     {
         manager.StartPlayerTurn();
     }
-    public override void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            manager.EndPlayerTurn();
-        }
-    }
 }
 
 public class EnemyTurnState : BattleState
