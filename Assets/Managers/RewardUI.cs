@@ -41,6 +41,8 @@ public class RewardUI : MonoBehaviour
             GameObject cardGO = Instantiate(manager.cardPrefab, cardParent);
             CardUI ui = cardGO.GetComponent<CardUI>();
             ui.SetupCard(card);
+            ui.SetDisplayContext(CardUI.DisplayContext.Reward);
+
             if (!cardGO.TryGetComponent<Button>(out var b))
             {
                 b = cardGO.AddComponent<Button>();

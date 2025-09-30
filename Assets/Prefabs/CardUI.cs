@@ -6,6 +6,13 @@ using DG.Tweening;
 [RequireComponent(typeof(CanvasGroup))]
 public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
+     public enum DisplayContext
+    {
+        Hand,
+        Reward
+    }
+
+
     [Header("UI 參考")]
     public Image cardImage;
 
@@ -36,6 +43,8 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     private Color hoverGlowColor = Color.green;
 
     private Vector2 originalAnchoredPosition;
+    private Vector3 originalLocalScale;
+
     private bool isDragging;
     private bool isHovering;
     private int originalSiblingIndex;
@@ -60,15 +69,33 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     [SerializeField]
     private float hoverGlowFadeDuration = 0.2f;
 
-    [Header("Layout（可選）")]
+    [Header("獎勵介面懸停效果")]
+    [SerializeField]
+    private float rewardHoverScale = 1.05f;
+
+    [SerializeField]
+    private float rewardHoverDuration = 0.15f;
+
+    [SerializeField]
+    private float rewardReturnDuration = 0.15f;
+
+    [SerializeField]
+    private Ease rewardHoverEase = Ease.OutQuad;
+
+    [SerializeField]
+    private Ease rewardReturnEase = Ease.InOutQuad;
+
+    [Header("Layout可選")]
     [SerializeField] private LayoutElement layoutElement;
 
     [Header("互動權限")]
     [SerializeField] private bool interactable = true;
-
+    private bool allowDragging = true;
+    private DisplayContext displayContext = DisplayContext.Hand;
     private Tweener positionTween;
     private Tweener alphaTween;
     private Tweener hoverGlowTween;
+    private Tweener scaleTween;
     private bool suppressNextHover;
 
     private void OnDisable()
@@ -76,6 +103,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         if (positionTween != null) { positionTween.Kill(); positionTween = null; }
         if (hoverGlowTween != null) { hoverGlowTween.Kill(); hoverGlowTween = null; }
         if (alphaTween != null) { alphaTween.Kill(); alphaTween = null; }
+        if (scaleTween != null) { scaleTween.Kill(); scaleTween = null; }
     }
 
     private void Awake()
@@ -89,6 +117,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         mainCamera = Camera.main;
         originalParent = transform.parent;
         originalAnchoredPosition = rectTransform.anchoredPosition;
+        originalLocalScale = rectTransform.localScale;
 
         if (canvasGroup != null)
             originalAlpha = canvasGroup.alpha;
@@ -114,6 +143,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
         if (rectTransform == null) return;
+        rectTransform.localScale = originalLocalScale;
 
         Camera targetCamera = mainCamera != null ? mainCamera : Camera.main;
         if (EventSystem.current != null &&
@@ -146,7 +176,7 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     #region 拖曳事件
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!interactable) return;
+        if (!interactable || !allowDragging) return;
 
         isDragging = true;
         ResetHoverPosition(true);
@@ -177,14 +207,14 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (!interactable) return;
+        if (!interactable || !allowDragging) return;
         float scaleFactor = canvas != null ? canvas.scaleFactor : 1f;
         rectTransform.anchoredPosition += eventData.delta / scaleFactor;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!interactable) return;
+        if (!interactable || !allowDragging) return;
         if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
 
         isDragging = false;
@@ -224,8 +254,15 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         if (suppressNextHover) { suppressNextHover = false; return; }
 
-        Vector2 targetPosition = originalAnchoredPosition + Vector2.up * hoverMoveDistance;
-        TweenCardPosition(targetPosition, hoverMoveDuration, hoverMoveEase);
+       if (displayContext == DisplayContext.Reward)
+        {
+            AnimateRewardHover(true);
+        }
+        else
+        {
+            Vector2 targetPosition = originalAnchoredPosition + Vector2.up * hoverMoveDistance;
+            TweenCardPosition(targetPosition, hoverMoveDuration, hoverMoveEase);
+        }
         isHovering = true;
         SetHoverGlowVisible(true);
     }
@@ -321,12 +358,19 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         if (positionTween != null) { positionTween.Kill(); positionTween = null; }
         if (alphaTween != null) { alphaTween.Kill(); alphaTween = null; }
         if (hoverGlowTween != null) { hoverGlowTween.Kill(); hoverGlowTween = null; }
+        if (scaleTween != null) { scaleTween.Kill(); scaleTween = null; }
     }
 
     private void ResetHoverPosition(bool instant = false)
     {
-        TweenCardPosition(originalAnchoredPosition, instant ? 0f : returnMoveDuration, returnMoveEase);
-
+        if (displayContext == DisplayContext.Reward)
+        {
+            AnimateRewardHover(false, instant);
+        }
+        else
+        {
+            TweenCardPosition(originalAnchoredPosition, instant ? 0f : returnMoveDuration, returnMoveEase);
+        }
         if (isHovering || instant)
         {
             isHovering = false;
@@ -374,6 +418,37 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         }
     }
 
+    private void AnimateRewardHover(bool hover, bool instant = false)
+    {
+        if (rectTransform == null) return;
+
+        if (scaleTween != null) { scaleTween.Kill(); scaleTween = null; }
+
+        Vector3 targetScale = hover ? originalLocalScale * rewardHoverScale : originalLocalScale;
+        float duration = hover ? rewardHoverDuration : rewardReturnDuration;
+        Ease ease = hover ? rewardHoverEase : rewardReturnEase;
+
+        if (instant || duration <= 0f)
+        {
+            rectTransform.localScale = targetScale;
+            return;
+        }
+
+        scaleTween = rectTransform
+            .DOScale(targetScale, duration)
+            .SetEase(ease)
+            .SetUpdate(true)
+            .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+            .OnKill(() => scaleTween = null);
+    }
+
+    public void SetDisplayContext(DisplayContext context)
+    {
+        displayContext = context;
+        allowDragging = displayContext == DisplayContext.Hand;
+        ResetHoverPosition(true);
+    }
+    
     // 公開 API：回合輪替時一鍵收尾 & 重綁手牌
     public void ForceResetToHand(Transform newHandParent = null)
     {
