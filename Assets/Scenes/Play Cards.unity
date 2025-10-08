@@ -9658,7 +9658,7 @@ MonoBehaviour:
   - {fileID: 0}
   cardPrefab: {fileID: 4596475076482105628, guid: 100c1a32f1664694b821ff0756181848, type: 3}
   enemyPrefab: {fileID: 4204690724760053818, guid: 87fab54ae39d11f449187455258a17cc, type: 3}
-  initialEnemyCount: 36
+  initialEnemyCount: 1
   playerStartPos: {x: 0, y: 0}
   handPanel: {fileID: 5627973}
   deckPile: {fileID: 1721566109}

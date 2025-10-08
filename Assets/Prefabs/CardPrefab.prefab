@@ -146,7 +146,7 @@ MonoBehaviour:
   hoverGlowImage: {fileID: 4058666933160878638}
   hoverGlowColor: {r: 0.16078427, g: 0.972549, b: 0.9641703, a: 0.9019608}
   hoverMoveDuration: 0.2
-  drawAnimationDuration: 0.5
+  drawAnimationDuration: 1
   drawStartScale: 0.5
   drawAnimationEase: 9
   returnMoveDuration: 0.2
