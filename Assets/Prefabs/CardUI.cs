@@ -107,6 +107,12 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     private Tweener hoverGlowTween;
     private Tweener scaleTween;
     private bool suppressNextHover;
+    private bool isPlayingDrawAnimation;
+    private int drawAnimationTweenCount;
+    private bool allowDraggingBeforeDraw;
+    private bool blocksRaycastsBeforeDraw;
+    private bool interactableBeforeDraw = true;
+
 
     private void OnDisable()
     {
@@ -455,7 +461,16 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     public void SetDisplayContext(DisplayContext context)
     {
         displayContext = context;
-        allowDragging = displayContext == DisplayContext.Hand;
+        bool desiredAllowDragging = displayContext == DisplayContext.Hand;
+        if (isPlayingDrawAnimation)
+        {
+            allowDraggingBeforeDraw = desiredAllowDragging;
+            allowDragging = false;
+        }
+        else
+        {
+            allowDragging = desiredAllowDragging;
+        }
         ResetHoverPosition(true);
     }
     
@@ -487,10 +502,22 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         originalAnchoredPosition = Vector2.zero;
     }
 
-    public void SetInteractable(bool value) => interactable = value;
-
-     public void PlayDrawAnimation(RectTransform deckOrigin, float? durationOverride = null, float? startScaleOverride = null, Ease? easeOverride = null)
+     public void SetInteractable(bool value)
     {
+        if (isPlayingDrawAnimation)
+        {
+            interactableBeforeDraw = value;
+
+            if (!value)
+                interactable = false;
+
+            return;
+        }
+
+        interactable = value;
+    }
+
+    public void PlayDrawAnimation(RectTransform deckOrigin, float? durationOverride = null, float? startScaleOverride = null, Ease? easeOverride = null)    {
         if (rectTransform == null)
             rectTransform = GetComponent<RectTransform>();
 
@@ -535,10 +562,15 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             }
         }
 
+        positionTween?.Kill();
+        scaleTween?.Kill();
+
+        BeginDrawAnimationPhase();
+
         rectTransform.anchoredPosition = startingAnchoredPosition;
         rectTransform.localScale = targetScale * startScale;
 
-         void RestoreLayoutIfNeeded()
+        void RestoreLayoutIfNeeded()
         {
             if (layoutRestored)
                 return;
@@ -557,9 +589,15 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             }
         }
 
-        positionTween?.Kill();
-        scaleTween?.Kill();
+       
+        if (duration <= 0f)
+        {
+            RestoreLayoutIfNeeded();
+            CompleteDrawAnimationInstantly();
+            return;
+        }
 
+        RegisterDrawAnimationTween();
         positionTween = rectTransform
             .DOAnchorPos(targetAnchoredPosition, duration)
             .SetEase(ease)
@@ -569,8 +607,10 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             {
                 positionTween = null;
                 RestoreLayoutIfNeeded();
+                OnDrawAnimationTweenTerminated();
             });
 
+        RegisterDrawAnimationTween();
         scaleTween = rectTransform
             .DOScale(targetScale, duration)
             .SetEase(ease)
@@ -580,7 +620,77 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
             {
                 scaleTween = null;
                 RestoreLayoutIfNeeded();
+                OnDrawAnimationTweenTerminated();
             });
+    }
+
+    private void BeginDrawAnimationPhase()
+    {
+        if (!isPlayingDrawAnimation)
+        {
+            interactableBeforeDraw = interactable;
+            allowDraggingBeforeDraw = allowDragging;
+            blocksRaycastsBeforeDraw = canvasGroup != null && canvasGroup.blocksRaycasts;
+
+            SetInteractable(false);
+            allowDragging = false;
+
+            if (canvasGroup != null)
+                canvasGroup.blocksRaycasts = false;
+
+            ResetHoverPosition(true);
+            isHovering = false;
+            suppressNextHover = true;
+            isDragging = false;
+        }
+
+        isPlayingDrawAnimation = true;
+        drawAnimationTweenCount = 0;
+    }
+
+    private void RegisterDrawAnimationTween()
+    {
+        drawAnimationTweenCount++;
+    }
+
+    private void OnDrawAnimationTweenTerminated()
+    {
+        if (!isPlayingDrawAnimation)
+            return;
+
+        drawAnimationTweenCount = Mathf.Max(0, drawAnimationTweenCount - 1);
+        if (drawAnimationTweenCount > 0)
+            return;
+
+        EndDrawAnimationPhase();
+    }
+
+    private void CompleteDrawAnimationInstantly()
+    {
+        if (!isPlayingDrawAnimation)
+            return;
+
+        EndDrawAnimationPhase();
+    }
+
+    private void EndDrawAnimationPhase()
+    {
+        isPlayingDrawAnimation = false;
+        drawAnimationTweenCount = 0;
+
+        allowDragging = displayContext == DisplayContext.Hand && allowDraggingBeforeDraw;
+
+        bool shouldBeInteractable = interactableBeforeDraw;
+
+        if (battleManager != null)
+            shouldBeInteractable = interactableBeforeDraw && !battleManager.IsCardInteractionLocked;
+
+        SetInteractable(shouldBeInteractable);
+
+        if (canvasGroup != null)
+            canvasGroup.blocksRaycasts = blocksRaycastsBeforeDraw;
+
+        suppressNextHover = true;
     }
 
     private bool HandleAttackDrop(Collider2D hit)
