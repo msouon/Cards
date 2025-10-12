@@ -9656,9 +9656,12 @@ MonoBehaviour:
   player: {fileID: 1848671827}
   enemies:
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   cardPrefab: {fileID: 4596475076482105628, guid: 100c1a32f1664694b821ff0756181848, type: 3}
   enemyPrefab: {fileID: 4204690724760053818, guid: 87fab54ae39d11f449187455258a17cc, type: 3}
-  initialEnemyCount: 1
+  initialEnemyCount: 36
   playerStartPos: {x: 0, y: 0}
   handPanel: {fileID: 5627973}
   deckPile: {fileID: 1721566109}
@@ -10771,18 +10774,16 @@ MonoBehaviour:
   gold: 0
   baseHandCardCount: 4
   deck:
-  - {fileID: 11400000, guid: feba486c5bd8d53448c1a549d4e83245, type: 2}
-  - {fileID: 11400000, guid: 11d3cc5377d2ef3459a4b4380becefff, type: 2}
-  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
-  - {fileID: 11400000, guid: 9a5a37cfe6c1216448cd26bb8d654d24, type: 2}
+  - {fileID: 11400000, guid: 9b35b87c81d6f2147a95c1bca48d0f77, type: 2}
   - {fileID: 11400000, guid: a58c41531431ead4ebb45b0f3f038cbc, type: 2}
+  - {fileID: 11400000, guid: feba486c5bd8d53448c1a549d4e83245, type: 2}
+  - {fileID: 11400000, guid: be5ac3e72ed43204385448b0880494ae, type: 2}
+  - {fileID: 11400000, guid: fe3d1d20386028d4c99ac6c885f1b27e, type: 2}
+  - {fileID: 11400000, guid: 6eadd55c1ec341341a4ff6210583bfe0, type: 2}
+  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
   - {fileID: 11400000, guid: 4fd70894f3d5cb54388922c21a1e3c60, type: 2}
-  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
-  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
-  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
-  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
-  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
-  - {fileID: 11400000, guid: 9aaf3c9fe05acb3468a4b7d995117dd5, type: 2}
+  - {fileID: 11400000, guid: 11d3cc5377d2ef3459a4b4380becefff, type: 2}
+  - {fileID: 11400000, guid: 9a5a37cfe6c1216448cd26bb8d654d24, type: 2}
   relics: []
   hasDiscardedThisTurn: 0
   discardCountThisTurn: 0
