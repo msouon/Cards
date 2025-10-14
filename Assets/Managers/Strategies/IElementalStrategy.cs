@@ -145,6 +145,15 @@ public class ThunderStrategy : DefaultElementalStrategy          // 雷元素策
         Board board = GameObject.FindObjectOfType<Board>();      // 快取場上的棋盤
         Enemy[] allEnemies = GameObject.FindObjectsOfType<Enemy>(); // 快取所有敵人，避免重複搜尋
 
+         bool defenderHasWaterTag = defender.HasElement(ElementType.Water); // 防守者是否帶有水元素標籤
+        bool defenderOnWaterTile = false;                        // 防守者腳下的格子是否帶有水元素
+
+        if (board != null)                                       // 需要棋盤資訊才能檢查格子元素
+        {
+            BoardTile defenderTile = board.GetTileAt(defender.gridPosition); // 取得當前格子
+            defenderOnWaterTile = defenderTile != null && defenderTile.HasElement(ElementType.Water); // 判斷格子是否帶水
+        }
+
         if (defender.HasElement(ElementType.Fire))               // 雷 + 火：擴散到周圍（與火類似，但元素交換不同）
         {                                                        // if 區塊開始
             ElementType keep = ElementType.Thunder;              // 保留雷
@@ -165,7 +174,7 @@ public class ThunderStrategy : DefaultElementalStrategy          // 雷元素策
             defender.RemoveElementTag(remove);                   // 移除本體火
             defender.AddElementTag(keep);                        // 本體加雷
         }                                                        // if 區塊結束
-        else if (defender.HasElement(ElementType.Water))         // 雷 + 水：導電擴散，會看相鄰或處於水格
+        else if (defenderHasWaterTag || defenderOnWaterTile)     // 雷 + 水：導電擴散，判斷敵人是否帶水或站在水格
         {                                                        // else if 區塊開始
             if (board != null)                                   // 需要棋盤資訊才能追蹤水元素連鎖
             {                                                    // if 區塊開始
