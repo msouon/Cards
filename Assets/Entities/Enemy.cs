@@ -56,7 +56,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         transform.position = tile.transform.position;
     }
 
-    private bool IsPlayerInRange(Player player)
+    protected virtual bool IsPlayerInRange(Player player)
     {
         foreach (var off in attackRangeOffsets)
         {
@@ -65,7 +65,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         return false;
     }
 
-    private void MoveOneStepTowards(Player player)
+    protected virtual void MoveOneStepTowards(Player player)
     {
         Board board = FindObjectOfType<Board>();
         if (board == null) return;
@@ -87,7 +87,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         if (bestPos != gridPosition)
             MoveToPosition(bestPos);
     }
-    private void Awake()                           // Awake 在物件建立時呼叫
+    protected virtual void Awake()                  // Awake 在物件建立時呼叫
     {
         currentHP = maxHP;                         // 同步當前生命值為最大值
     }
@@ -126,7 +126,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         root.localScale = originalScale;
     }
 
-    public void TakeDamage(int dmg)                // 受到傷害 (考慮格擋)
+    public virtual void TakeDamage(int dmg)                // 受到傷害 (考慮格擋)
     {
         if (shakeRoutine != null) StopCoroutine(shakeRoutine);
         shakeRoutine = StartCoroutine(HitShake());
@@ -147,7 +147,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         }
     }
 
-    public void TakeTrueDamage(int dmg)           // 真實傷害 (無視格擋)
+    public virtual void TakeTrueDamage(int dmg)           // 真實傷害 (無視格擋)
     {
          if (shakeRoutine != null) StopCoroutine(shakeRoutine);
         shakeRoutine = StartCoroutine(HitShake());
@@ -221,7 +221,19 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
 
 
 
-    public void EnemyAction(Player player)        // 敵人執行動作
+    protected virtual int GetBaseAttackDamage()
+    {
+        return 10;
+    }
+
+    protected virtual int CalculateAttackDamage()
+    {
+        int atkValue = GetBaseAttackDamage();
+        if (hasBerserk) atkValue += 5;       // 狂暴狀態加攻擊
+        return atkValue;
+    }
+
+    public virtual void EnemyAction(Player player)        // 敵人執行動作
     {
         if (frozenTurns > 0)                     // 冰凍回合中不能行動
         {
@@ -235,9 +247,11 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         }
         if (IsPlayerInRange(player))
         {
-            int atkValue = 10;                    // 基礎攻擊
-            if (hasBerserk) atkValue += 5;       // 狂暴狀態加攻擊
-            player.TakeDamage(atkValue);         // 對玩家造成傷害
+              int atkValue = CalculateAttackDamage();
+            if (atkValue > 0)
+            {
+                player.TakeDamage(atkValue);         // 對玩家造成傷害
+            }
         }
         else
         {
