@@ -5,6 +5,13 @@ using Unity.VisualScripting;                             // 引用視覺化腳�
 using UnityEngine;                                       // 引用 Unity 核心功能
 using UnityEngine.UI;                                    // 引用 UI 元件功能
 
+[Serializable]
+public class EnemySpawnConfig
+{
+    public Enemy enemyPrefab;                              // 該組要生成的敵人 Prefab
+    public int count = 1;                                  // 生成的數量
+}
+
 public class BattleManager : MonoBehaviour               // 戰鬥流程管理器，掛在場景中的空物件上
 {
     public Player player;                                 // 場景中玩家角色的引用
@@ -12,8 +19,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     public GameObject cardPrefab;                         // 卡牌的 Prefab，用於生成卡牌 UI
 
     [Header("Initial Setup")]
-    public Enemy enemyPrefab;                              // 用於生成敵人的 Prefab
-    public int initialEnemyCount = 1;                      // 開場敵人數量
+    public List<EnemySpawnConfig> enemySpawnConfigs = new List<EnemySpawnConfig>();
     public Vector2Int playerStartPos = Vector2Int.zero;    // 玩家起始格子
     // 定義回合狀態枚舉
     private BattleStateMachine stateMachine = new BattleStateMachine();
@@ -26,7 +32,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
     [Header("UI References")]
     [SerializeField] private Button endTurnButton;        // 玩家結束回合按鈕
-    
+
     public Board board;                                   // Inspector 中指定的棋盤管理器
 
     [Header("Guaranteed Cards")]
@@ -63,7 +69,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     public float cardUseDelay = 0f;               // 玩家回合開始後，延遲幾秒才能操作卡牌
     private bool _cardInteractionLocked = false;  // 全域鎖定旗標
     public bool IsCardInteractionLocked => _cardInteractionLocked;
-    
+
     void Awake()
     {
         SetEndTurnButtonInteractable(false);
@@ -129,22 +135,31 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     // 依設定隨機生成敵人
     private void SpawnInitialEnemies()
     {
-        if (enemyPrefab == null || board == null) return;
+        if (board == null || enemySpawnConfigs == null) return;
 
         List<Vector2Int> positions = board.GetAllPositions();
         positions.Remove(playerStartPos); // 避免與玩家重疊
 
-        for (int i = 0; i < initialEnemyCount && positions.Count > 0; i++)
+        foreach (var config in enemySpawnConfigs)
         {
-            int idx = UnityEngine.Random.Range(0, positions.Count);
-            Vector2Int pos = positions[idx];
-            positions.RemoveAt(idx);
+            if (config == null || config.enemyPrefab == null) continue;
 
-            BoardTile tile = board.GetTileAt(pos);
-            if (tile == null) continue;
+            int spawnCount = Mathf.Max(0, config.count);
+            for (int i = 0; i < spawnCount && positions.Count > 0; i++)
+            {
+                int idx = UnityEngine.Random.Range(0, positions.Count);
+                Vector2Int pos = positions[idx];
+                positions.RemoveAt(idx);
 
-            Enemy e = Instantiate(enemyPrefab, tile.transform.position, Quaternion.identity);
-            e.gridPosition = pos;
+                BoardTile tile = board.GetTileAt(pos);
+                if (tile == null) continue;
+
+                Enemy e = Instantiate(config.enemyPrefab, tile.transform.position, Quaternion.identity);
+                e.gridPosition = pos;
+            }
+
+            if (positions.Count == 0)
+                break;
         }
     }
 
@@ -235,7 +250,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     private IEnumerator EnableCardsAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-         _cardInteractionLocked = false;
+        _cardInteractionLocked = false;
         ApplyInteractableToAllCards(true);
     }
 
@@ -627,7 +642,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
             energyText.text = $"{player.energy}/{player.maxEnergy}";
         }
     }
-    
+
     /// <summary>
     /// 開始選擇攻擊目標：檢查能量 → 高亮範圍內的敵人
     /// </summary>
