@@ -59,6 +59,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
 
         gridPosition = targetGridPos;
         transform.position = tile.transform.position;
+        CaptureSpriteDefaults();
     }
 
     protected virtual bool IsPlayerInRange(Player player)
@@ -115,15 +116,21 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         return spriteRoot ? spriteRoot : transform;
     }
 
-    private void EnsureSpriteDefaults()
+    private void CaptureSpriteDefaults()
     {
-        if (spriteDefaultsInitialized) return;
+        
         Transform root = GetSpriteRoot();
         spriteDefaultLocalPosition = root.localPosition;
         spriteDefaultLocalScale = root.localScale;
         spriteDefaultsInitialized = true;
     }
 
+    private void EnsureSpriteDefaults()
+    {
+        if (spriteDefaultsInitialized) return;
+        CaptureSpriteDefaults();
+    }
+    
     private void ResetSpriteVisual()
     {
         EnsureSpriteDefaults();

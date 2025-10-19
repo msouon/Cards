@@ -11,7 +11,7 @@ public class StoneToad : Enemy      // 繼承自自訂的 Enemy 基底類別（�
     [SerializeField] private int maxMovementSteps = 2;           // 單回合最多可移動步數
     [SerializeField] private int baseAttackDamage = 1;           // 基礎攻擊傷害（未包含護甲轉傷）
     [SerializeField] private int armorCap = 999;                 // 護甲上限（避免無限制累積）
-
+    private Vector2Int? previousGridPosition = null;             // 記錄上一次成功移動的格子，用於避免立即折返
     protected override void Awake()  // 物件初始化（覆寫 Enemy.Awake）
     {
         enemyName = "石蟾蜍";        // 設定敵人顯示名稱
@@ -74,6 +74,10 @@ public class StoneToad : Enemy      // 繼承自自訂的 Enemy 基底類別（�
             if (stepDistance == int.MaxValue) continue; // 不可達（或找不到路徑）則跳過
 
             int score = Mathf.Abs(stepDistance - preferredDistanceInSteps); // 與偏好距離的差越小越好
+            if (previousGridPosition.HasValue && pos == previousGridPosition.Value)
+            {
+                score += 1; // 為回到上一個位置增加微小懲罰，避免無意義的來回折返
+            }
             float euclid = Vector2Int.Distance(pos, player.position);       // 歐氏距離作為次要比較（更貼近視覺距離）
 
             if (score < bestScore || (score == bestScore && euclid < bestEuclid)) // 先比主分，再比次分
@@ -86,7 +90,12 @@ public class StoneToad : Enemy      // 繼承自自訂的 Enemy 基底類別（�
 
         if (bestPos != gridPosition)    // 若最佳位置不是原地
         {
+            Vector2Int oldPosition = gridPosition; // 記錄移動前的位置
             MoveToPosition(bestPos);    // 直接移動到該格（注意：這是「跳到結果格」，非逐步演出）
+            if (gridPosition != oldPosition)
+            {
+                previousGridPosition = oldPosition; // 僅在成功移動後更新前一格紀錄
+            }
         }
     }
 
