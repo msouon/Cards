@@ -395,9 +395,12 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// <summary>
     /// 玩卡：處理費用、執行效果、棄牌、更新 UI
     /// </summary>
-    public void PlayCard(CardBase cardData)
+    public bool PlayCard(CardBase cardData)
     {
-        if (!(stateMachine.Current is PlayerTurnState)) return;
+        if (!(stateMachine.Current is PlayerTurnState)) return false;
+        if (cardData == null) return false;
+        if (player == null || player.Hand == null) return false;
+        if (!player.Hand.Contains(cardData)) return false;
 
         // 計算最終費用 (包含 Buff 修改)
         int finalCost = cardData.cost;
@@ -415,7 +418,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         if (player.energy < finalCost)                     // 能量不足時拒絕
         {
             Debug.Log("Not enough energy");
-            return;
+            return false;
         }
 
         Enemy target = enemies.Find(e => e != null && e.currentHP > 0);
@@ -430,15 +433,11 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
         // 若手牌中仍含此卡，則移至棄牌堆
         bool isGuaranteedMovement = IsGuaranteedMovementCard(cardData);
-        if (player.Hand.Contains(cardData))
+        bool removedFromHand = player.Hand.Remove(cardData);
+
+        if (removedFromHand && !isGuaranteedMovement)
         {
-            player.Hand.Remove(cardData);
-
-            if (!isGuaranteedMovement)
-            {
-
-                player.discardPile.Add(cardData);
-            }
+            player.discardPile.Add(cardData);
         }
 
         if (isGuaranteedMovement)
@@ -449,6 +448,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         player.UseEnergy(finalCost);
         GameEvents.RaiseCardPlayed(cardData);
         RefreshHandUI();
+        return true;
     }
 
     /// <summary>

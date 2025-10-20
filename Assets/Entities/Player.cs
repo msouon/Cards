@@ -42,6 +42,8 @@ public class Player : MonoBehaviour
         currentHP = maxHP;
         // 遊戲開始時將能量補滿
         energy = maxEnergy;
+        // 遊戲開始時隨機洗牌
+        ShuffleDeck();
     }
 
     /// <summary>

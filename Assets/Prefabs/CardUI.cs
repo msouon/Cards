@@ -194,6 +194,9 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     {
         if (!interactable || !allowDragging) return;
 
+        if (battleManager == null)
+            battleManager = FindObjectOfType<BattleManager>();
+        
         isDragging = true;
         ResetHoverPosition(true);
 
@@ -235,6 +238,9 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
         isDragging = false;
 
+        if (battleManager == null)
+            battleManager = FindObjectOfType<BattleManager>();
+
         Camera targetCamera = mainCamera != null ? mainCamera : Camera.main;
         Vector2 worldPos = targetCamera != null
             ? targetCamera.ScreenToWorldPoint(eventData.position)
@@ -248,6 +254,8 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
                 used = HandleAttackDrop(hit);
             else if (cardData.cardType == CardType.Movement)
                 used = HandleMovementDrop(hit);
+            else if (cardData.cardType == CardType.Skill)
+                used = HandleSkillDrop(hit);
         }
 
         if (used)
@@ -720,6 +728,34 @@ public class CardUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
         return false;
     }
     
+    private bool HandleSkillDrop(Collider2D hit)
+    {
+        if (!IsCardPlayableFromHand())
+            return false;
+
+        if (hit != null)
+        {
+            Player playerTarget = hit.GetComponentInParent<Player>();
+            if (playerTarget != null && playerTarget == battleManager.player)
+            {
+                return battleManager.PlayCard(cardData);
+            }
+        }
+        return false;
+    }
+
+    private bool IsCardPlayableFromHand()
+    {
+        if (battleManager == null || cardData == null)
+            return false;
+
+        Player playerReference = battleManager.player;
+        if (playerReference == null || playerReference.Hand == null)
+            return false;
+
+        return playerReference.Hand.Contains(cardData);
+    }
+
      private void CreatePlaceholder()
     {
         if (placeholder != null || originalParent == null) return;

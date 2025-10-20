@@ -21,7 +21,10 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
     public EnemyBuffs buffs = new EnemyBuffs();    // 敵人 Buff 結構
     public Vector2Int gridPosition;                // 在格子地圖中的座標
 
-     [Header("攻擊範圍偏移")]
+    [Header("攻擊設定")]
+    [SerializeField] private int baseAttackDamage = 10; // 基礎攻擊傷害，可於 Inspector 調整
+
+    [Header("攻擊範圍偏移")]
     public List<Vector2Int> attackRangeOffsets = new List<Vector2Int>
     {
         new Vector2Int(-2,0), new Vector2Int(2,0),
@@ -130,7 +133,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         if (spriteDefaultsInitialized) return;
         CaptureSpriteDefaults();
     }
-    
+
     private void ResetSpriteVisual()
     {
         EnsureSpriteDefaults();
@@ -271,11 +274,15 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         }
     }
 
-
+    public int BaseAttackDamage
+    {
+        get => baseAttackDamage;
+        set => baseAttackDamage = Mathf.Max(0, value);
+    }
 
     protected virtual int GetBaseAttackDamage()
     {
-        return 10;
+        return Mathf.Max(0, baseAttackDamage);
     }
 
     protected virtual int CalculateAttackDamage()
@@ -299,7 +306,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         }
         if (IsPlayerInRange(player))
         {
-              int atkValue = CalculateAttackDamage();
+            int atkValue = CalculateAttackDamage();
             if (atkValue > 0)
             {
                 player.TakeDamage(atkValue);         // 對玩家造成傷害
