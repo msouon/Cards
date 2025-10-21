@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 765307179903137180}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.6, y: 9.33, z: 0}
-  m_LocalScale: {x: 63.11017, y: 29.512255, z: 0}
+  m_LocalPosition: {x: -1.6, y: 13.6, z: 0}
+  m_LocalScale: {x: 89.53977, y: 38.16707, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7603518278215076845}
@@ -94,6 +94,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8275633406451967337}
   - component: {fileID: 6910358785589753546}
+  - component: {fileID: 2341328735428622983}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -168,6 +169,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &2341328735428622983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7976853016657536233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c9f7432e892ff34a8d77ad506ae9809, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reference: {fileID: 7603518278215076845}
+  baseSortingOrder: 0
+  yToOrderMultiplier: 100
 --- !u!1 &8127814944662599423
 GameObject:
   m_ObjectHideFlags: 0
@@ -217,7 +233,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyName: HeiGouJing
-  maxHP: 30
+  maxHP: 10
   currentHP: 0
   block: 0
   burningTurns: 0
@@ -237,10 +253,9 @@ MonoBehaviour:
   - {x: -1, y: 2}
   - {x: 1, y: 2}
   isBoss: 0
-  spriteRoot: {fileID: 0}
+  spriteRoot: {fileID: 8275633406451967337}
   sortingOrderBase: 0
   sortingOrderMultiplier: 100
-  sortingOffsetExclusions: []
   shakeDuration: 0.1
   shakeMagnitude: 0.1
   scaleMultiplier: 1.1
@@ -281,7 +296,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -1.8778954, y: 11.627836}
+  m_Offset: {x: -3.956623, y: 12.970228}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -292,7 +307,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 93.926765, y: 37.367855}
+  m_Size: {x: 81.4544, y: 34.68307}
   m_EdgeRadius: 0
 --- !u!1001 &9144976963268288745
 PrefabInstance:

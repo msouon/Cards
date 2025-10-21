@@ -1,3 +1,4 @@
+using System;                                     // 引用系統基本功能
 using System.Collections;                          // 引用非泛型集合命名空間
 using System.Collections.Generic;                 // 引用泛型集合命名空間
 using UnityEngine;                                 // 引用 Unity 核心功能
@@ -83,19 +84,35 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         sortingGroup = GetComponentInChildren<SortingGroup>(true);
         sortingGroupBaseOrder = sortingGroup != null ? sortingGroup.sortingOrder : 0;
 
-        cachedSpriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
-        if (cachedSpriteRenderers != null && cachedSpriteRenderers.Length > 0)
+        SpriteRenderer[] allRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+        if (allRenderers != null && allRenderers.Length > 0)
         {
-            cachedSpriteBaseOrders = new int[cachedSpriteRenderers.Length];
-            for (int i = 0; i < cachedSpriteRenderers.Length; i++)
+            List<SpriteRenderer> filteredRenderers = new List<SpriteRenderer>(allRenderers.Length);
+            List<int> filteredBaseOrders = new List<int>(allRenderers.Length);
+
+            foreach (SpriteRenderer renderer in allRenderers)
             {
-                SpriteRenderer renderer = cachedSpriteRenderers[i];
-                cachedSpriteBaseOrders[i] = renderer != null ? renderer.sortingOrder : 0;
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                if (renderer.GetComponent<SpriteSortingByParentY>() != null)
+                {
+                    continue;
+                }
+
+                filteredRenderers.Add(renderer);
+                filteredBaseOrders.Add(renderer.sortingOrder);
             }
+
+            cachedSpriteRenderers = filteredRenderers.ToArray();
+            cachedSpriteBaseOrders = filteredBaseOrders.ToArray();
         }
         else
         {
-            cachedSpriteBaseOrders = new int[0];
+            cachedSpriteRenderers = Array.Empty<SpriteRenderer>();
+            cachedSpriteBaseOrders = Array.Empty<int>();
         }
     }
 
@@ -308,8 +325,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         {
             float t = elapsed / shakeDuration;
             float currentMag = Mathf.Lerp(shakeMagnitude, 0f, t); // 幅度隨時間衰減
-            root.localPosition = originalPos + (Vector3)Random.insideUnitCircle * currentMag;
-            root.localScale = Vector3.Lerp(targetScale, originalScale, t);
+            root.localPosition = originalPos + (Vector3)UnityEngine.Random.insideUnitCircle * currentMag;            root.localScale = Vector3.Lerp(targetScale, originalScale, t);
             elapsed += Time.deltaTime;
             yield return null;
         }
