@@ -37,6 +37,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
     public bool isBoss = false;                    // 是否為首領級敵人
 
     private HashSet<ElementType> elementTags = new HashSet<ElementType>();  // 元素標籤
+    public event Action<Enemy> ElementTagsChanged;                           // 元素標籤變動事件
 
     [SerializeField] private Transform spriteRoot;            // 僅包含貼圖的顯示節點
 
@@ -405,12 +406,23 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
 
     public void AddElementTag(ElementType e)      // 添加元素標籤
     {
-        elementTags.Add(e);
+        if (elementTags.Add(e))
+        {
+            ElementTagsChanged?.Invoke(this);
+        }
     }
 
     public void RemoveElementTag(ElementType e)   // 移除元素標籤
     {
-        elementTags.Remove(e);
+        if (elementTags.Remove(e))
+        {
+            ElementTagsChanged?.Invoke(this);
+        }
+    }
+
+    public IEnumerable<ElementType> GetElementTags()  // 取得目前所有元素標籤
+    {
+        return elementTags;
     }
 
     public int ApplyElementalAttack(ElementType e, int baseDamage, Player player)
