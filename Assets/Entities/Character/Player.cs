@@ -517,9 +517,8 @@ public class PlayerBuffs
     public int needRandomDiscardAtEnd = 0;  // 回合結束時需要隨機棄牌的張數
     public int meleeDamageReduce = 0;       // 近戰傷害固定減免
     public int weak = 0;                    // 虛弱回合數
-    public int stun = 0;                    // 暈眩回合數（無法行動)
     public int bleed = 0;                   // 流血回合數
-    public int imprison = 0;                // 禁錮回合數（無法移動）
+    public int imprison = 0;                // 禁錮回合數（含原暈眩效果，無法行動 / 移動）
     public int nextTurnAllAttackPlus = 0;   // 下回合所有攻擊 +X
 
     /// <summary>
@@ -547,7 +546,6 @@ public class PlayerBuffs
             owner.TakeStatusDamage(3);
         }
 
-        if (stun > 0) stun--;
         if (weak > 0) weak--;
         if (imprison > 0) imprison--;
         if (bleed > 0) bleed--;
@@ -555,6 +553,6 @@ public class PlayerBuffs
 
     public bool CanMove()
     {
-        return imprison <= 0 && stun <= 0;
+        return imprison <= 0;
     }
 }

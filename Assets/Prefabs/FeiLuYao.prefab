@@ -305,7 +305,7 @@ MonoBehaviour:
   shakeDuration: 0.1
   shakeMagnitude: 0.1
   scaleMultiplier: 1.1
-  highlightFx: {fileID: 0}
+  highlightFx: {fileID: 765307179903137180}
   weakDuration: 2
   bleedDuration: 2
   imprisonDuration: 1
