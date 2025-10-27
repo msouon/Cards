@@ -460,8 +460,22 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public void UseMovementCard(CardBase movementCard)
     {
+        if (movementCard == null)
+        {
+            return;
+        }
         if (!(stateMachine.Current is PlayerTurnState))
         {
+            return;
+        }
+        if (player == null)
+        {
+            Debug.LogWarning("Player reference not assigned.");
+            return;
+        }
+        if (!player.buffs.CanMove())
+        {
+            Debug.Log("Cannot use movement: movement is currently restricted.");
             return;
         }
         if (player.energy < movementCard.cost)             // 能量檢查
@@ -544,6 +558,12 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         if (!isSelectingMovementTile) return false;
         if (!highlightedTiles.Contains(tile))
         {
+            CancelMovementSelection();
+            return false;
+        }
+        if (player == null || !player.buffs.CanMove())
+        {
+            Debug.Log("Cannot move: movement is currently restricted.");
             CancelMovementSelection();
             return false;
         }
