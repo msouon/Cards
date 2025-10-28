@@ -3,35 +3,35 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// ©Ò¦³¥dµPªº©â¶H°ò©³Ãþ§O¡AÄ~©Ó ScriptableObject «K©ó¦b Unity ¤¤«ØÀÉ
+/// ï¿½Ò¦ï¿½ï¿½dï¿½Pï¿½ï¿½ï¿½ï¿½Hï¿½ï¿½ï¿½ï¿½ï¿½Oï¿½Aï¿½~ï¿½ï¿½ ScriptableObject ï¿½Kï¿½ï¿½b Unity ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 /// </summary>
 public abstract class CardBase : ScriptableObject
 {
-    [Header("¥dµP°ò¥»ÄÝ©Ê")]
-    public string cardName;         // ¥dµP¦WºÙ
-    public int cost;                // ¯à¶q®ø¯Ó
-    [TextArea] public string description;   // ±Ô­z¤å¦r
-    public Sprite cardImage;        // ¥d­±¹Ï¥Ü (¥i¿ï)
+    [Header("ï¿½dï¿½Pï¿½ï¿½ï¿½Ý©ï¿½")]
+    public string cardName;         // ï¿½dï¿½Pï¿½Wï¿½ï¿½
+    public int cost;                // ï¿½ï¿½qï¿½ï¿½ï¿½ï¿½
+    [TextArea] public string description;   // ï¿½Ô­zï¿½ï¿½r
+    public Sprite cardImage;        // ï¿½dï¿½ï¿½ï¿½Ï¥ï¿½ (ï¿½iï¿½ï¿½)
 
 
-    [Header("¥dµPÃþ«¬")]
+    [Header("ï¿½dï¿½Pï¿½ï¿½ï¿½ï¿½")]
     public CardType cardType;
 
     /// <summary>
-    /// °õ¦æ¥dµP®ÄªG (¥Ñ¤lÃþ§O¹ê§@)
+    /// ï¿½ï¿½ï¿½ï¿½dï¿½Pï¿½ÄªG (ï¿½Ñ¤lï¿½ï¿½ï¿½Oï¿½ï¿½@)
     /// </summary>
-    /// <param name="player">ª±®a</param>
-    /// <param name="enemy">¥Ø¼Ð¼Ä¤H(³æÅé)</param>
+    /// <param name="player">ï¿½ï¿½ï¿½a</param>
+    /// <param name="enemy">ï¿½Ø¼Ð¼Ä¤H(ï¿½ï¿½ï¿½ï¿½)</param>
     public abstract void ExecuteEffect(Player player, Enemy enemy);
 
     /// <summary>
-    /// (¥i¿ï) µ¹²¾°Ê¥d©Î½d³ò§ðÀ»¥d¨Ï¥ÎªºÂX¥R
-    /// ¨Ò¦p¦³ªº¥d»Ý­n«ü©w®æ¤l©Î½d³ò
+    /// (ï¿½iï¿½ï¿½) ï¿½ï¿½ï¿½ï¿½ï¿½Ê¥dï¿½Î½dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½dï¿½Ï¥Îªï¿½ï¿½Xï¿½R
+    /// ï¿½Ò¦pï¿½ï¿½ï¿½ï¿½ï¿½dï¿½Ý­nï¿½ï¿½ï¿½wï¿½ï¿½lï¿½Î½dï¿½ï¿½
     /// </summary>
     /// 
 
     public virtual void ExecuteOnPosition(Player player, Vector2Int targetGridPos)
     {
-        // ¹w³]¤£°µ¨Æ¡A²¾°Ê¥d¥i¥HÂÐ¼g
+        // ï¿½wï¿½]ï¿½ï¿½ï¿½ï¿½ï¿½Æ¡Aï¿½ï¿½ï¿½Ê¥dï¿½iï¿½Hï¿½Ð¼g
     }
 }
