@@ -299,13 +299,13 @@ MonoBehaviour:
   - {x: -1, y: 2}
   - {x: 1, y: 2}
   isBoss: 0
-  spriteRoot: {fileID: 0}
+  spriteRoot: {fileID: 8275633406451967337}
   sortingOrderBase: 0
   sortingOrderMultiplier: 100
   shakeDuration: 0.1
   shakeMagnitude: 0.1
   scaleMultiplier: 1.1
-  highlightFx: {fileID: 0}
+  highlightFx: {fileID: 765307179903137180}
   sleepDuration: 3
   fixedDamage: 1
 --- !u!1001 &1817239499420612326

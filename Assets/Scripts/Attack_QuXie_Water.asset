@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b96ca4ba888486247a79190dea9ca4c7, type: 3}
-  m_Name: Attack_JiJiRuLvLing_Water
+  m_Script: {fileID: 11500000, guid: e4032dd74250fa64ab873b97069320a6, type: 3}
+  m_Name: Attack_QuXie_Water
   m_EditorClassIdentifier: 
-  cardName: "\u6C34"
+  cardName: 
   cost: 1
-  description: "\u6C34\u6C34\u6C34\u6C34\u6C34"
-  cardImage: {fileID: 21300000, guid: 996a9fcddec98dc46bfa04efede71cd1, type: 3}
+  description: 
+  cardImage: {fileID: 21300000, guid: bab3a5eb653951b49bc0e9ed1c966032, type: 3}
   cardType: 0
   rangeOffsets:
   - {x: -2, y: 0}
@@ -24,5 +24,7 @@ MonoBehaviour:
   - {x: 1, y: -2}
   - {x: -1, y: 2}
   - {x: 1, y: 2}
-  baseDamage: 6
-  waterEffectPrefab: {fileID: 7213305712601285595, guid: 1e8d195486e9d0340b3ca44c17f86d2d, type: 3}
+  damage: 4
+  dispelCount: 1
+  hitEffectPrefab: {fileID: 7213305712601285595, guid: 1e8d195486e9d0340b3ca44c17f86d2d, type: 3}
+  elementType: 1
