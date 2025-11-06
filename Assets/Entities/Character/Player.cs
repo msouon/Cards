@@ -45,6 +45,11 @@ public class Player : MonoBehaviour
         energy = maxEnergy;
         // 遊戲開始時隨機洗牌
         ShuffleDeck();
+
+        if (RunManager.Instance != null)
+        {
+            RunManager.Instance.RegisterPlayer(this);
+        }
     }
 
     /// <summary>

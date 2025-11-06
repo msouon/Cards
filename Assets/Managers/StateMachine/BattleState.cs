@@ -37,6 +37,7 @@ public class VictoryState : BattleState
     public VictoryState(BattleManager m) : base(m) { }
     public override void Enter()
     {
+        RunManager.Instance?.HandleBattleVictory();
         manager.ShowVictoryRewards();
     }
 }
@@ -47,6 +48,7 @@ public class DefeatState : BattleState
     public override void Enter()
     {
         Debug.Log("Defeat...");
+        RunManager.Instance?.HandleBattleDefeat();
     }
 }
 

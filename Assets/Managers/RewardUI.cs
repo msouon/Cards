@@ -61,5 +61,6 @@ public class RewardUI : MonoBehaviour
     public void Close()
     {
         gameObject.SetActive(false);
+        RunManager.Instance?.ReturnToRunSceneFromBattle();
     }
 }
