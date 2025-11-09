@@ -482,6 +482,8 @@ public class Player : MonoBehaviour
 
         // 5. 將玩家的世界座標設成該格子的 transform.position
         transform.position = tile.transform.position;
+
+        tile.HandlePlayerEntered(this);
     }
 
     /// <summary>
@@ -504,6 +506,9 @@ public class Player : MonoBehaviour
 
         position = targetPos;
         transform.position = new Vector3(targetPos.x, targetPos.y, 0f);
+
+        BoardTile tile = board != null ? board.GetTileAt(targetPos) : null;
+        tile?.HandlePlayerEntered(this);
     }
 }
 

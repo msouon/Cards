@@ -70,6 +70,12 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     private bool _cardInteractionLocked = false;  // 全域鎖定旗標
     public bool IsCardInteractionLocked => _cardInteractionLocked;
 
+    private bool processingPlayerTurnStart = false;
+    private bool processingEnemyTurnStart = false;
+
+    public bool IsProcessingPlayerTurnStart => processingPlayerTurnStart;
+    public bool IsProcessingEnemyTurnStart => processingEnemyTurnStart;
+
     void Awake()
     {
         SetEndTurnButtonInteractable(false);
@@ -217,12 +223,16 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         UpdateEnergyUI();
 
         // 敵人回合開始效果（保留）
+        processingPlayerTurnStart = true;
+
         var enemiesAtTurnStart = new List<Enemy>(enemies);
         foreach (var e in enemiesAtTurnStart)
         {
             if (e != null)
                 e.ProcessTurnStart();
         }
+
+        processingPlayerTurnStart = false;
 
         // 計算抽牌數（保留）
         int drawCount = player.baseHandCardCount + player.buffs.nextTurnDrawChange;
@@ -365,6 +375,8 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public IEnumerator EnemyTurnCoroutine()
     {
+        
+        processingEnemyTurnStart = true;
 
         var enemiesAtEnemyTurnStart = new List<Enemy>(enemies);
         foreach (var e in enemiesAtEnemyTurnStart)
@@ -372,6 +384,8 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
             if (e != null)
                 e.ProcessTurnStart();                     // 敵人回合開始效果
         }
+
+        processingEnemyTurnStart = false;
         yield return new WaitForSeconds(1f);               // 等待 1 秒
 
         var enemiesTakingActions = new List<Enemy>(enemies);

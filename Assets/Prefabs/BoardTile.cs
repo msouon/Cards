@@ -9,13 +9,17 @@ public class BoardTile : MonoBehaviour
 {
     public Vector2Int gridPosition;              // 必填：該格在地圖的座標
     [SerializeField] private GameObject highlightObject; // 指向高亮用的子物件
+    [SerializeField] private GameObject attackPreviewHighlightObject; // 指向敵人攻擊預告高亮
     [SerializeField] private GameObject growthTrapIcon;  // 指向荊棘圖示的子物件
     [SerializeField] private GameObject waterElementIcon; // 水屬性圖示
     [SerializeField] private GameObject woodElementIcon;  // 木屬性圖示
+    [SerializeField] private GameObject miasmaEffectObject; // 瘴氣效果顯示
 
     // 元素標籤紀錄
     private HashSet<ElementType> elements = new HashSet<ElementType>();
     public bool growthTrap = false; // 水+木產生的陷阱
+    private bool hasMiasma = false;                     // 是否佈滿瘴氣
+    private int miasmaDamage = 0;                       // 瘴氣造成的傷害
     // 讓 BattleManager 呼叫
 
      private void Awake()
@@ -58,6 +62,17 @@ public class BoardTile : MonoBehaviour
         if (highlightObject) highlightObject.SetActive(show);
     }
 
+    /// <summary>
+    /// 單獨控制敵人攻擊範圍的高亮顯示
+    /// </summary>
+    public void SetAttackHighlight(bool show)
+    {
+        if (attackPreviewHighlightObject)
+        {
+            attackPreviewHighlightObject.SetActive(show);
+        }
+    }
+
     /// 新增：元素處理
     public void AddElement(ElementType e)
     {
@@ -88,6 +103,46 @@ public class BoardTile : MonoBehaviour
         return elements.Contains(e);
     }
 
+     /// <summary>
+    /// 檢查是否佈滿瘴氣
+    /// </summary>
+    public bool HasMiasma => hasMiasma;
+
+    /// <summary>
+    /// 獲取該格瘴氣造成的傷害值（若沒有瘴氣則為 0）
+    /// </summary>
+    public int MiasmaDamage => hasMiasma ? Mathf.Max(0, miasmaDamage) : 0;
+
+    /// <summary>
+    /// 設定瘴氣狀態
+    /// </summary>
+    public void SetMiasma(bool active, int damage)
+    {
+        hasMiasma = active;
+        miasmaDamage = active ? Mathf.Max(0, damage) : 0;
+
+        if (miasmaEffectObject)
+        {
+            miasmaEffectObject.SetActive(active);
+        }
+    }
+
+    /// <summary>
+    /// 當玩家進入此格時的觸發處理
+    /// </summary>
+    public void HandlePlayerEntered(Player player)
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        if (hasMiasma && miasmaDamage > 0)
+        {
+            player.TakeDamage(miasmaDamage);
+        }
+    }
+    
     private void UpdateElementIcons()
     {
         bool hasWater = HasElement(ElementType.Water);

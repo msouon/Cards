@@ -12,12 +12,10 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
     public int block = 0;                          // 格擋值，用於抵消傷害
     public virtual bool ShouldResetBlockEachTurn => true; // 預設每回合重置格擋
 
-    public int burningTurns = 0;
-
-    public int frozenTurns = 0;
-
-    public bool thunderstrike = false;
-    public bool superconduct = false;
+    public int burningTurns = 0;                   // 燃燒狀態持續回合數
+    public int frozenTurns = 0;                    // 冰凍狀態持續回合數
+    public bool thunderstrike = false;             // 是否被雷擊標記
+    public bool superconduct = false;              // 是否處於超導狀態
 
     public bool hasBerserk = false;                // 是否處於狂暴狀態
     public EnemyBuffs buffs = new EnemyBuffs();    // 敵人 Buff 結構
@@ -484,7 +482,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         return strat.CalculateDamage(player, this, baseDamage);
     }
 
-    public void ProcessTurnStart()
+    public virtual void ProcessTurnStart()
     {
         var tagsCopy = new List<ElementType>(elementTags);
         foreach (var tag in tagsCopy)
@@ -551,7 +549,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         }
     }
 
-    void Die()                                    // 死亡處理
+    protected virtual void Die()                                    // 死亡處理
     {
         Debug.Log(enemyName + " died!");
          BattleManager bm = FindObjectOfType<BattleManager>();
