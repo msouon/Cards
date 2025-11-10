@@ -15,6 +15,7 @@ public class EnemySpawnConfig
 public class BattleManager : MonoBehaviour               // 戰鬥流程管理器，掛在場景中的空物件上
 {
     public Player player;                                 // 場景中玩家角色的引用
+    [NonSerialized]
     public List<Enemy> enemies = new List<Enemy>();       // 場景中敵人角色列表
     public GameObject cardPrefab;                         // 卡牌的 Prefab，用於生成卡牌 UI
 
@@ -79,11 +80,44 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     void Awake()
     {
         SetEndTurnButtonInteractable(false);
+        LoadEncounterFromRunManager();
     }
 
     void Start()
     {
         StartCoroutine(GameStartRoutine());
+    }
+
+    private void LoadEncounterFromRunManager()
+    {
+        var runManager = RunManager.Instance;
+        var encounter = runManager?.ActiveNode?.Encounter;
+
+        if (encounter == null)
+            return;
+
+        if (enemySpawnConfigs == null)
+            enemySpawnConfigs = new List<EnemySpawnConfig>();
+        else
+            enemySpawnConfigs.Clear();
+
+        var enemyGroups = encounter.EnemyGroups;
+        if (enemyGroups == null)
+            return;
+
+        foreach (var group in enemyGroups)
+        {
+            if (group == null)
+                continue;
+
+            var configCopy = new EnemySpawnConfig
+            {
+                enemyPrefab = group.enemyPrefab,
+                count = group.count
+            };
+
+            enemySpawnConfigs.Add(configCopy);
+        }
     }
 
     private IEnumerator GameStartRoutine()
