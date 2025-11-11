@@ -191,8 +191,9 @@ MonoBehaviour:
   battleSceneName: BattleScene
   shopSceneName: ShopScene
   eventSceneName: EventScene
-  floorCount: 4
-  nodesPerFloor: 4
+  floorCount: 6
+  minNodesPerFloor: 4
+  maxNodesPerFloor: 5
   eventRate: 0.2
   shopRate: 0.15
   encounterPool: {fileID: 11400000, guid: edfdd0303848fe24c94cb125f349ba8f, type: 2}
@@ -408,9 +409,12 @@ MonoBehaviour:
   mapContainer: {fileID: 494392454}
   nodeButtonPrefab: {fileID: 2492151301511066359, guid: f4ee4c21dc5b0004c8f5bee9f504acb7, type: 3}
   connectionLinePrefab: {fileID: 3847716138468893191, guid: 36d36d61597f2a349833978c4864d779, type: 3}
-  floorSpacing: 200
-  nodeSpacing: 160
+  floorSpacing: 170
+  nodeSpacing: 250
   connectionThickness: 6
+  horizontalPositionJitter: 40
+  verticalPositionJitter: 30
+  connectionAnchorJitter: 0
   defaultColor: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 1}
   completedColor: {r: 0, g: 0, b: 0, a: 1}
   currentColor: {r: 1, g: 0.85, b: 0.3, a: 1}

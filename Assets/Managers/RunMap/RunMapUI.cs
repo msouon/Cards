@@ -25,10 +25,11 @@ public class RunMapUI : MonoBehaviour
     [SerializeField] private Color currentColor = new Color(1f, 0.85f, 0.3f);     // 玩家目前所在節點顏色
     [SerializeField] private Color lockedColor = new Color(0.5f, 0.5f, 0.5f);     // 還不能點的節點顏色
 
-    // 把每個 MapNodeData 對應到它的 Button，之後要更新顏色/可互動性會用到
-    private readonly Dictionary<MapNodeData, Button> nodeButtons = new Dictionary<MapNodeData, Button>();
     // 把每個 MapNodeData 對應到它的 RectTransform，之後畫連線要知道位置
     private readonly Dictionary<MapNodeData, RectTransform> nodeRects = new Dictionary<MapNodeData, RectTransform>();
+
+    // 把每個 MapNodeData 對應到它的 Button，之後要更新顏色/可互動性會用到
+    private readonly Dictionary<MapNodeData, Button> nodeButtons = new Dictionary<MapNodeData, Button>();
     private float refreshTimer;  // 每隔一小段時間刷新節點狀態，避免每幀都跑
 
     private void Awake()
@@ -205,6 +206,8 @@ public class RunMapUI : MonoBehaviour
                 lineRect.anchorMin = new Vector2(0.5f, 1f);
                 lineRect.anchorMax = new Vector2(0.5f, 1f);
                 lineRect.pivot = new Vector2(0.5f, 0.5f);
+                // 讓連線繪製在節點下方，確保節點 UI 會顯示在最上層
+                lineRect.SetAsFirstSibling();
 
                 // 起點跟終點的位置
                 Vector2 start = startRect.anchoredPosition;

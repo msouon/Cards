@@ -25,4 +25,4 @@ MonoBehaviour:
   - {x: -1, y: 2}
   - {x: 1, y: 2}
   baseDamage: 6
-  thunderEffectPrefab: {fileID: 8880584399469985521, guid: e9a051f2c2db3154ebd288d46878136b, type: 3}
+  thunderEffectPrefab: {fileID: 7817183967626856756, guid: e9a051f2c2db3154ebd288d46878136b, type: 3}

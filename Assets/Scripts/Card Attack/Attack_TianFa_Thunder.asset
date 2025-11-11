@@ -38,5 +38,5 @@ MonoBehaviour:
   - {x: -3, y: -2}
   baseDamage: 5
   effectRadius: 4.48
-  hitEffectPrefab: {fileID: 8880584399469985521, guid: e9a051f2c2db3154ebd288d46878136b, type: 3}
+  hitEffectPrefab: {fileID: 7817183967626856756, guid: e9a051f2c2db3154ebd288d46878136b, type: 3}
   elementType: 2

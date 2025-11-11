@@ -15,4 +15,4 @@ MonoBehaviour:
   encounterId: B1_three enemy
   enemyGroups:
   - enemyPrefab: {fileID: 4204690724760053818, guid: 87fab54ae39d11f449187455258a17cc, type: 3}
-    count: 3
+    count: 1

@@ -6545,7 +6545,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 1848671827}
-  enemies: []
   cardPrefab: {fileID: 4596475076482105628, guid: 100c1a32f1664694b821ff0756181848, type: 3}
   enemySpawnConfigs: []
   playerStartPos: {x: 0, y: 0}
@@ -8056,8 +8055,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 100
   currentHP: 0
-  maxEnergy: 3
-  energy: 3
+  maxEnergy: 10
+  energy: 10
   block: 0
   gold: 0
   baseHandCardCount: 4
