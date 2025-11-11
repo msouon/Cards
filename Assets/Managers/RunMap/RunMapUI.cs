@@ -15,6 +15,9 @@ public class RunMapUI : MonoBehaviour
     [SerializeField] private float floorSpacing = 200f;      // 一層跟一層之間的垂直距離
     [SerializeField] private float nodeSpacing = 160f;       // 同一層節點之間的水平距離
     [SerializeField] private float connectionThickness = 6f; // 連線的粗細
+    [SerializeField] private float horizontalPositionJitter = 40f; // 節點水平方向的隨機偏移
+    [SerializeField] private float verticalPositionJitter = 30f;   // 節點垂直方向的隨機偏移
+    [SerializeField] private float connectionAnchorJitter = 20f;   // 連線端點的手繪感偏移
 
     [Header("Colors")]
     [SerializeField] private Color defaultColor = Color.white;                    // 一般節點的顏色
@@ -149,7 +152,11 @@ public class RunMapUI : MonoBehaviour
                 float x = floorNodes.Count == 1 ? 0f : -width * 0.5f + nodeIndex * nodeSpacing;
                 // Y 位置是樓層 * 間距，往下排
                 float y = -floorIndex * floorSpacing;
-                buttonRect.anchoredPosition = new Vector2(x, y);
+
+                float jitterX = horizontalPositionJitter > 0f ? UnityEngine.Random.Range(-horizontalPositionJitter, horizontalPositionJitter) : 0f;
+                float jitterY = verticalPositionJitter > 0f ? UnityEngine.Random.Range(-verticalPositionJitter, verticalPositionJitter) : 0f;
+
+                buttonRect.anchoredPosition = new Vector2(x + jitterX, y + jitterY);
 
                 // 初始外觀（顏色 + 文字）設定
                 ConfigureButtonVisuals(buttonInstance, node);
@@ -202,6 +209,14 @@ public class RunMapUI : MonoBehaviour
                 // 起點跟終點的位置
                 Vector2 start = startRect.anchoredPosition;
                 Vector2 end = endRect.anchoredPosition;
+
+                if (connectionAnchorJitter > 0f)
+                {
+                    Vector2 startJitter = UnityEngine.Random.insideUnitCircle * connectionAnchorJitter;
+                    Vector2 endJitter = UnityEngine.Random.insideUnitCircle * connectionAnchorJitter;
+                    start += startJitter;
+                    end += endJitter;
+                }
                 Vector2 direction = end - start;
                 float distance = direction.magnitude;
 

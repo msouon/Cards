@@ -97,7 +97,8 @@ public class RunManager : MonoBehaviour
 
     [Header("Map Generation")]
     [SerializeField] private int floorCount = 4;                     // 一張圖有幾層
-    [SerializeField] private int nodesPerFloor = 4;                  // 每一層最多幾個節點
+    [SerializeField] private int minNodesPerFloor = 2;               // 每層節點數下限
+    [SerializeField] private int maxNodesPerFloor = 4;               // 每層節點數上限
     [SerializeField, Range(0f, 1f)] private float eventRate = 0.2f;  // 生成事件節點的機率
     [SerializeField, Range(0f, 1f)] private float shopRate = 0.15f;  // 生成商店節點的機率
     [SerializeField] private EncounterPool encounterPool;            // 戰鬥池，從這裡抽戰鬥 :contentReference[oaicite:4]{index=4}
@@ -171,11 +172,12 @@ public class RunManager : MonoBehaviour
     public void GenerateNewRun()
     {
         mapFloors.Clear(); // 先清空之前的地圖
-        for (int floor = 0; floor < Mathf.Max(1, floorCount); floor++)
+        int totalFloors = Mathf.Max(1, floorCount);
+        for (int floor = 0; floor < totalFloors; floor++)
+
         {
             // 最後一層只生成一個節點（通常是 Boss）
-            int nodeCount = floor == floorCount - 1 ? 1 : Mathf.Max(1, nodesPerFloor);
-            var floorNodes = new List<MapNodeData>(nodeCount);
+            int nodeCount = floor == totalFloors - 1 ? 1 : GetRandomNodeCountForFloor(floor);            var floorNodes = new List<MapNodeData>(nodeCount);
             for (int i = 0; i < nodeCount; i++)
             {
                 // 決定這一格要生成什麼類型的節點
@@ -382,37 +384,201 @@ public class RunManager : MonoBehaviour
             List<MapNodeData> currentFloor = mapFloors[floor];
             List<MapNodeData> nextFloor = mapFloors[floor + 1];
 
+            if (nextFloor.Count == 0)
+                continue;
+
+            var outgoingConnections = new Dictionary<MapNodeData, int>();
+            foreach (MapNodeData node in currentFloor)
+            {
+                outgoingConnections[node] = node.NextNodes.Count;
+            }
+
+            // 先確保下一層每個節點至少有一個入口
+            for (int nextIndex = 0; nextIndex < nextFloor.Count; nextIndex++)
+            {
+                MapNodeData nextNode = nextFloor[nextIndex];
+                MapNodeData source = GetBestSourceForNextNode(currentFloor, outgoingConnections, nextIndex, nextFloor.Count);
+                if (!TryConnectNodes(source, nextNode, outgoingConnections))
+                {
+                    foreach (MapNodeData fallbackSource in currentFloor)
+                    {
+                        if (TryConnectNodes(fallbackSource, nextNode, outgoingConnections))
+                            break;
+                    }
+                }
+            }
+
+            // 確保這層的每個節點至少有一條線
             for (int i = 0; i < currentFloor.Count; i++)
             {
                 MapNodeData node = currentFloor[i];
-                int minIndex = Mathf.Max(0, i - 1);
-                int maxIndex = Mathf.Min(nextFloor.Count - 1, i + 1);
-                if (nextFloor.Count == 0)
+                if (node.NextNodes.Count > 0)
                     continue;
 
-                // 有時候節點數不同，要修正能連的範圍
-                if (minIndex > maxIndex)
+                List<MapNodeData> candidates = GetCandidateNextNodes(currentFloor.Count, i, nextFloor);
+                ShuffleList(candidates);
+
+                bool connected = false;
+                foreach (MapNodeData candidate in candidates)
                 {
-                    minIndex = 0;
-                    maxIndex = nextFloor.Count - 1;
+                    if (TryConnectNodes(node, candidate, outgoingConnections))
+                    {
+                        connected = true;
+                        break;
+                    }
                 }
 
-                // 把當前節點連到下一層「附近」的節點，做出像 StS 那種網狀
-                for (int j = minIndex; j <= maxIndex; j++)
+                if (!connected && nextFloor.Count > 0)
                 {
-                    node.AddNextNode(nextFloor[j]);
+                    MapNodeData fallback = nextFloor[UnityEngine.Random.Range(0, nextFloor.Count)];
+                    TryConnectNodes(node, fallback, outgoingConnections);
                 }
+            }
 
-                // 萬一沒連到任何一個，就隨機連一個，避免死路
-                if (node.NextNodes.Count == 0)
+            // 加一點隨機的分支，但不超過兩條
+            for (int i = 0; i < currentFloor.Count; i++)
+            {
+                MapNodeData node = currentFloor[i];
+                int desiredConnections = UnityEngine.Random.Range(1, 3); // 1 或 2
+
+                while (node.NextNodes.Count < desiredConnections)
                 {
-                    int randomIndex = UnityEngine.Random.Range(0, nextFloor.Count);
-                    node.AddNextNode(nextFloor[randomIndex]);
+                    List<MapNodeData> candidates = GetCandidateNextNodes(currentFloor.Count, i, nextFloor);
+                    // 避免重複嘗試同樣的節點
+                    candidates.RemoveAll(candidate => node.NextNodes.Contains(candidate));
+                    if (candidates.Count == 0)
+                        break;
+
+                    ShuffleList(candidates);
+
+                    bool added = false;
+                    foreach (MapNodeData candidate in candidates)
+                    {
+                        if (TryConnectNodes(node, candidate, outgoingConnections))
+                        {
+                            added = true;
+                            break;
+                        }
+                    }
+
+                    if (!added)
+                        break;
                 }
             }
         }
     }
 
+    private int GetRandomNodeCountForFloor(int floor)
+    {
+        int min = Mathf.Clamp(Mathf.Min(minNodesPerFloor, maxNodesPerFloor), 2, 10);
+        int max = Mathf.Clamp(Mathf.Max(minNodesPerFloor, maxNodesPerFloor), min, 10);
+        return UnityEngine.Random.Range(min, max + 1);
+    }
+
+    private List<MapNodeData> GetCandidateNextNodes(int currentFloorCount, int currentIndex, List<MapNodeData> nextFloor)
+    {
+        var candidates = new List<MapNodeData>();
+
+        if (nextFloor == null || nextFloor.Count == 0)
+            return candidates;
+
+        if (currentFloorCount <= 1 || nextFloor.Count == 1)
+        {
+            candidates.AddRange(nextFloor);
+            return candidates;
+        }
+
+        float t = currentFloorCount > 1 ? (float)currentIndex / (currentFloorCount - 1) : 0f;
+        int targetIndex = Mathf.Clamp(Mathf.RoundToInt(t * (nextFloor.Count - 1)), 0, nextFloor.Count - 1);
+
+        for (int offset = -1; offset <= 1; offset++)
+        {
+            int candidateIndex = Mathf.Clamp(targetIndex + offset, 0, nextFloor.Count - 1);
+            MapNodeData candidate = nextFloor[candidateIndex];
+            if (!candidates.Contains(candidate))
+            {
+                candidates.Add(candidate);
+            }
+        }
+
+        if (candidates.Count == 0)
+        {
+            candidates.AddRange(nextFloor);
+        }
+
+        return candidates;
+    }
+
+    private void ShuffleList<T>(List<T> list)
+    {
+        if (list == null)
+            return;
+
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int swapIndex = UnityEngine.Random.Range(0, i + 1);
+            T temp = list[i];
+            list[i] = list[swapIndex];
+            list[swapIndex] = temp;
+        }
+    }
+
+    private bool TryConnectNodes(MapNodeData source, MapNodeData target, Dictionary<MapNodeData, int> outgoingConnections)
+    {
+        if (source == null || target == null)
+            return false;
+
+        int currentCount = outgoingConnections.TryGetValue(source, out int count) ? count : source.NextNodes.Count;
+        if (currentCount >= 2)
+            return false;
+
+        if (source.NextNodes.Contains(target))
+            return false;
+
+        source.AddNextNode(target);
+        outgoingConnections[source] = source.NextNodes.Count;
+        return true;
+    }
+
+    private MapNodeData GetBestSourceForNextNode(List<MapNodeData> currentFloor, Dictionary<MapNodeData, int> outgoingConnections, int nextIndex, int nextCount)
+    {
+        if (currentFloor == null || currentFloor.Count == 0)
+            return null;
+
+        if (currentFloor.Count == 1)
+            return currentFloor[0];
+
+        int targetIndex = nextCount > 1
+            ? Mathf.RoundToInt((float)nextIndex / (nextCount - 1) * (currentFloor.Count - 1))
+            : currentFloor.Count / 2;
+
+        var candidates = new List<MapNodeData>();
+        for (int offset = -1; offset <= 1; offset++)
+        {
+            int candidateIndex = Mathf.Clamp(targetIndex + offset, 0, currentFloor.Count - 1);
+            MapNodeData candidate = currentFloor[candidateIndex];
+            if (!candidates.Contains(candidate))
+            {
+                candidates.Add(candidate);
+            }
+        }
+
+        ShuffleList(candidates);
+        foreach (MapNodeData candidate in candidates)
+        {
+            if (!outgoingConnections.TryGetValue(candidate, out int count) || count < 2)
+                return candidate;
+        }
+
+        foreach (MapNodeData node in currentFloor)
+        {
+            if (!outgoingConnections.TryGetValue(node, out int count) || count < 2)
+                return node;
+        }
+
+        return null;
+    }
+    
     // 決定這一層要生成什麼類型的節點
     private MapNodeType DetermineNodeTypeForFloor(int floor)
     {
