@@ -177,7 +177,9 @@ public class RunManager : MonoBehaviour
 
         {
             // 最後一層只生成一個節點（通常是 Boss）
-            int nodeCount = floor == totalFloors - 1 ? 1 : GetRandomNodeCountForFloor(floor);            var floorNodes = new List<MapNodeData>(nodeCount);
+            int nodeCount = floor == totalFloors - 1 ? 1 : GetRandomNodeCountForFloor(floor);
+
+            var floorNodes = new List<MapNodeData>(nodeCount);            
             for (int i = 0; i < nodeCount; i++)
             {
                 // 決定這一格要生成什麼類型的節點
@@ -384,146 +386,312 @@ public class RunManager : MonoBehaviour
             List<MapNodeData> currentFloor = mapFloors[floor];
             List<MapNodeData> nextFloor = mapFloors[floor + 1];
 
-            if (nextFloor.Count == 0)
+            if (currentFloor.Count == 0 || nextFloor.Count == 0)
                 continue;
 
+            int currentCount = currentFloor.Count;
+            int nextCount = nextFloor.Count;
+
             var outgoingConnections = new Dictionary<MapNodeData, int>();
-            foreach (MapNodeData node in currentFloor)
+            var incomingConnections = new Dictionary<MapNodeData, int>();
+
+            var sourceTargets = new List<int>[currentCount];
+            var sourceMinTargets = new int[currentCount];
+            var sourceMaxTargets = new int[currentCount];
+            var prefixMaxTargets = new int[currentCount];
+            var suffixMinTargets = new int[currentCount];
+
+            var outgoingCounts = new int[currentCount];
+            var incomingCounts = new int[nextCount];
+
+            for (int i = 0; i < currentCount; i++)
             {
-                outgoingConnections[node] = node.NextNodes.Count;
+                outgoingConnections[currentFloor[i]] = 0;
+                sourceTargets[i] = new List<int>();
+                sourceMinTargets[i] = int.MaxValue;
+                sourceMaxTargets[i] = -1;
             }
 
-            // 先確保下一層每個節點至少有一個入口
-            for (int nextIndex = 0; nextIndex < nextFloor.Count; nextIndex++)
+            int lastAssignedTarget = 0;
+
+            // 第一步：依照左右順序為每個節點建立主要連線，確保走線單調遞增
+            for (int sourceIndex = 0; sourceIndex < currentCount; sourceIndex++)
             {
-                MapNodeData nextNode = nextFloor[nextIndex];
-                MapNodeData source = GetBestSourceForNextNode(currentFloor, outgoingConnections, nextIndex, nextFloor.Count);
-                if (!TryConnectNodes(source, nextNode, outgoingConnections))
+                int minimumTarget = Mathf.Clamp(lastAssignedTarget, 0, nextCount - 1);
+                int targetIndex = SelectInitialTargetIndex(sourceIndex, currentCount, nextCount, minimumTarget);
+
+                if (!ConnectNodes(
+                        currentFloor,
+                        nextFloor,
+                        sourceIndex,
+                        targetIndex,
+                        outgoingConnections,
+                        incomingConnections,
+                        outgoingCounts,
+                        incomingCounts,
+                        sourceTargets,
+                        sourceMinTargets,
+                        sourceMaxTargets))
                 {
-                    foreach (MapNodeData fallbackSource in currentFloor)
-                    {
-                        if (TryConnectNodes(fallbackSource, nextNode, outgoingConnections))
-                            break;
-                    }
+                    continue;
                 }
+
+                lastAssignedTarget = Mathf.Max(lastAssignedTarget, targetIndex);
+                RecomputeConnectionBounds(currentCount, nextCount, sourceMinTargets, sourceMaxTargets, prefixMaxTargets, suffixMinTargets);
             }
 
-            // 確保這層的每個節點至少有一條線
-            for (int i = 0; i < currentFloor.Count; i++)
+            // 第二步：確保下一層的每個節點至少有一個來源
+            for (int targetIndex = 0; targetIndex < nextCount; targetIndex++)
             {
-                MapNodeData node = currentFloor[i];
-                if (node.NextNodes.Count > 0)
+                if (incomingCounts[targetIndex] > 0)
                     continue;
 
-                List<MapNodeData> candidates = GetCandidateNextNodes(currentFloor.Count, i, nextFloor);
-                ShuffleList(candidates);
+                int sourceIndex = SelectSourceForUnconnectedTarget(
+                    targetIndex,
+                    currentCount,
+                    nextCount,
+                    outgoingCounts,
+                    prefixMaxTargets,
+                    suffixMinTargets);
 
-                bool connected = false;
-                foreach (MapNodeData candidate in candidates)
+                if (sourceIndex < 0)
+                    continue;
+
+                if (!ConnectNodes(
+                        currentFloor,
+                        nextFloor,
+                        sourceIndex,
+                        targetIndex,
+                        outgoingConnections,
+                        incomingConnections,
+                        outgoingCounts,
+                        incomingCounts,
+                        sourceTargets,
+                        sourceMinTargets,
+                        sourceMaxTargets))
                 {
-                    if (TryConnectNodes(node, candidate, outgoingConnections))
-                    {
-                        connected = true;
-                        break;
-                    }
+                    continue;
                 }
 
-                if (!connected && nextFloor.Count > 0)
-                {
-                    MapNodeData fallback = nextFloor[UnityEngine.Random.Range(0, nextFloor.Count)];
-                    TryConnectNodes(node, fallback, outgoingConnections);
-                }
+                RecomputeConnectionBounds(currentCount, nextCount, sourceMinTargets, sourceMaxTargets, prefixMaxTargets, suffixMinTargets);
             }
 
-            // 加一點隨機的分支，但不超過兩條
-            for (int i = 0; i < currentFloor.Count; i++)
+            // 第三步：視情況增加第二條支線，仍舊維持單調以避免交叉
+            for (int sourceIndex = 0; sourceIndex < currentCount; sourceIndex++)
             {
-                MapNodeData node = currentFloor[i];
-                int desiredConnections = UnityEngine.Random.Range(1, 3); // 1 或 2
+                if (outgoingCounts[sourceIndex] >= 2)
+                    continue;
 
-                while (node.NextNodes.Count < desiredConnections)
+                if (UnityEngine.Random.value > 0.5f)
+                    continue;
+
+                int minAllowed = sourceIndex > 0 ? Mathf.Max(0, prefixMaxTargets[sourceIndex - 1]) : 0;
+                int maxAllowed = sourceIndex < currentCount - 1
+                    ? Mathf.Min(nextCount - 1, suffixMinTargets[sourceIndex + 1])
+                    : nextCount - 1;
+
+                if (minAllowed > maxAllowed)
+                    continue;
+
+                foreach (int candidate in EnumeratePreferredTargetIndices(sourceIndex, currentCount, nextCount))
                 {
-                    List<MapNodeData> candidates = GetCandidateNextNodes(currentFloor.Count, i, nextFloor);
-                    // 避免重複嘗試同樣的節點
-                    candidates.RemoveAll(candidate => node.NextNodes.Contains(candidate));
-                    if (candidates.Count == 0)
-                        break;
+                    if (candidate < minAllowed || candidate > maxAllowed)
+                        continue;
 
-                    ShuffleList(candidates);
+                    if (sourceTargets[sourceIndex].BinarySearch(candidate) >= 0)
+                        continue;
 
-                    bool added = false;
-                    foreach (MapNodeData candidate in candidates)
+                    if (!ConnectNodes(
+                            currentFloor,
+                            nextFloor,
+                            sourceIndex,
+                            candidate,
+                            outgoingConnections,
+                            incomingConnections,
+                            outgoingCounts,
+                            incomingCounts,
+                            sourceTargets,
+                            sourceMinTargets,
+                            sourceMaxTargets))
                     {
-                        if (TryConnectNodes(node, candidate, outgoingConnections))
-                        {
-                            added = true;
-                            break;
-                        }
+                        continue;
                     }
 
-                    if (!added)
-                        break;
+                    RecomputeConnectionBounds(currentCount, nextCount, sourceMinTargets, sourceMaxTargets, prefixMaxTargets, suffixMinTargets);
+                    break;
                 }
             }
         }
     }
 
-    private int GetRandomNodeCountForFloor(int floor)
+    private int SelectInitialTargetIndex(int sourceIndex, int currentCount, int nextCount, int minimumTarget)
     {
-        int min = Mathf.Clamp(Mathf.Min(minNodesPerFloor, maxNodesPerFloor), 2, 10);
-        int max = Mathf.Clamp(Mathf.Max(minNodesPerFloor, maxNodesPerFloor), min, 10);
-        return UnityEngine.Random.Range(min, max + 1);
-    }
+        if (nextCount <= 1)
+            return 0;
 
-    private List<MapNodeData> GetCandidateNextNodes(int currentFloorCount, int currentIndex, List<MapNodeData> nextFloor)
-    {
-        var candidates = new List<MapNodeData>();
-
-        if (nextFloor == null || nextFloor.Count == 0)
-            return candidates;
-
-        if (currentFloorCount <= 1 || nextFloor.Count == 1)
+        foreach (int candidate in EnumeratePreferredTargetIndices(sourceIndex, currentCount, nextCount))
         {
-            candidates.AddRange(nextFloor);
-            return candidates;
+            if (candidate < minimumTarget)
+                continue;
+
+            return candidate;
         }
 
-        float t = currentFloorCount > 1 ? (float)currentIndex / (currentFloorCount - 1) : 0f;
-        int targetIndex = Mathf.Clamp(Mathf.RoundToInt(t * (nextFloor.Count - 1)), 0, nextFloor.Count - 1);
+        return Mathf.Clamp(minimumTarget, 0, nextCount - 1);
+    }
 
-        for (int offset = -1; offset <= 1; offset++)
+    private int SelectSourceForUnconnectedTarget(
+        int targetIndex,
+        int currentCount,
+        int nextCount,
+        int[] outgoingCounts,
+        int[] prefixMaxTargets,
+        int[] suffixMinTargets)
+    {
+        int bestSource = -1;
+        int bestScore = int.MaxValue;
+
+        for (int sourceIndex = 0; sourceIndex < currentCount; sourceIndex++)
         {
-            int candidateIndex = Mathf.Clamp(targetIndex + offset, 0, nextFloor.Count - 1);
-            MapNodeData candidate = nextFloor[candidateIndex];
-            if (!candidates.Contains(candidate))
+            if (outgoingCounts[sourceIndex] >= 2)
+                continue;
+
+            int minAllowed = sourceIndex > 0 ? Mathf.Max(0, prefixMaxTargets[sourceIndex - 1]) : 0;
+            int maxAllowed = sourceIndex < currentCount - 1
+                ? Mathf.Min(nextCount - 1, suffixMinTargets[sourceIndex + 1])
+                : nextCount - 1;
+
+            if (targetIndex < minAllowed || targetIndex > maxAllowed)
+                continue;
+
+            int preferred = EstimatePreferredTargetIndex(sourceIndex, currentCount, nextCount);
+            int score = Mathf.Abs(targetIndex - preferred);
+
+            if (score < bestScore)
             {
-                candidates.Add(candidate);
+                bestScore = score;
+                bestSource = sourceIndex;
             }
         }
 
-        if (candidates.Count == 0)
+        if (bestSource < 0)
         {
-            candidates.AddRange(nextFloor);
+            for (int sourceIndex = 0; sourceIndex < currentCount; sourceIndex++)
+            {
+                if (outgoingCounts[sourceIndex] >= 2)
+                    continue;
+
+                bestSource = sourceIndex;
+                break;
+            }
         }
 
-        return candidates;
+        return bestSource;
     }
 
-    private void ShuffleList<T>(List<T> list)
+    private int EstimatePreferredTargetIndex(int sourceIndex, int currentCount, int nextCount)
     {
-        if (list == null)
-            return;
+        if (nextCount <= 1)
+            return 0;
 
-        for (int i = list.Count - 1; i > 0; i--)
+        if (currentCount <= 1)
+            return nextCount / 2;
+
+        float t = (float)sourceIndex / (currentCount - 1);
+        return Mathf.RoundToInt(t * (nextCount - 1));
+    }
+
+    private IEnumerable<int> EnumeratePreferredTargetIndices(int sourceIndex, int currentCount, int nextCount)
+    {
+        if (nextCount <= 0)
+            yield break;
+
+        if (nextCount == 1)
         {
-            int swapIndex = UnityEngine.Random.Range(0, i + 1);
-            T temp = list[i];
-            list[i] = list[swapIndex];
-            list[swapIndex] = temp;
+            yield return 0;
+            yield break;
+        }
+
+        int baseIndex = EstimatePreferredTargetIndex(sourceIndex, currentCount, nextCount);
+        int[] offsets = { 0, -1, 1, -2, 2, -3, 3 };
+        var seen = new HashSet<int>();
+
+        foreach (int offset in offsets)
+        {
+            int candidate = Mathf.Clamp(baseIndex + offset, 0, nextCount - 1);
+            if (seen.Add(candidate))
+                yield return candidate;
         }
     }
 
-    private bool TryConnectNodes(MapNodeData source, MapNodeData target, Dictionary<MapNodeData, int> outgoingConnections)
+    private bool ConnectNodes(
+        List<MapNodeData> currentFloor,
+        List<MapNodeData> nextFloor,
+        int sourceIndex,
+        int targetIndex,
+        Dictionary<MapNodeData, int> outgoingConnections,
+        Dictionary<MapNodeData, int> incomingConnections,
+        int[] outgoingCounts,
+        int[] incomingCounts,
+        List<int>[] sourceTargets,
+        int[] sourceMinTargets,
+        int[] sourceMaxTargets)
+    {
+        if (sourceIndex < 0 || sourceIndex >= currentFloor.Count)
+            return false;
+
+        if (targetIndex < 0 || targetIndex >= nextFloor.Count)
+            return false;
+
+        MapNodeData source = currentFloor[sourceIndex];
+        MapNodeData target = nextFloor[targetIndex];
+
+        if (!TryConnectNodes(source, target, outgoingConnections, incomingConnections))
+            return false;
+
+        outgoingCounts[sourceIndex] = outgoingConnections[source];
+        incomingCounts[targetIndex] = incomingConnections.TryGetValue(target, out int count) ? count : 0;
+
+        List<int> targets = sourceTargets[sourceIndex];
+        int insertIndex = targets.BinarySearch(targetIndex);
+        if (insertIndex < 0)
+            targets.Insert(~insertIndex, targetIndex);
+
+        sourceMinTargets[sourceIndex] = Mathf.Min(sourceMinTargets[sourceIndex], targetIndex);
+        sourceMaxTargets[sourceIndex] = Mathf.Max(sourceMaxTargets[sourceIndex], targetIndex);
+
+        return true;
+    }
+
+    private void RecomputeConnectionBounds(
+        int currentCount,
+        int nextCount,
+        int[] sourceMinTargets,
+        int[] sourceMaxTargets,
+        int[] prefixMaxTargets,
+        int[] suffixMinTargets)
+    {
+        int runningMax = -1;
+        for (int i = 0; i < currentCount; i++)
+        {
+            runningMax = Mathf.Max(runningMax, sourceMaxTargets[i]);
+            prefixMaxTargets[i] = runningMax;
+        }
+
+        int runningMin = nextCount - 1;
+        for (int i = currentCount - 1; i >= 0; i--)
+        {
+            int value = sourceMinTargets[i] == int.MaxValue ? nextCount - 1 : sourceMinTargets[i];
+            runningMin = Mathf.Min(runningMin, value);
+            suffixMinTargets[i] = runningMin;
+        }
+    }
+
+    private bool TryConnectNodes(
+        MapNodeData source,
+        MapNodeData target,
+        Dictionary<MapNodeData, int> outgoingConnections,
+        Dictionary<MapNodeData, int> incomingConnections)
     {
         if (source == null || target == null)
             return false;
@@ -537,46 +705,39 @@ public class RunManager : MonoBehaviour
 
         source.AddNextNode(target);
         outgoingConnections[source] = source.NextNodes.Count;
+
+        if (incomingConnections != null)
+        {
+            incomingConnections[target] = incomingConnections.TryGetValue(target, out int incoming)
+                ? incoming + 1
+                : 1;
+        }
+
         return true;
     }
 
-    private MapNodeData GetBestSourceForNextNode(List<MapNodeData> currentFloor, Dictionary<MapNodeData, int> outgoingConnections, int nextIndex, int nextCount)
+    // 決定這一層要生成幾個節點，維持在設定的範圍內並盡量讓樓層之間平滑過渡
+    private int GetRandomNodeCountForFloor(int floor)
     {
-        if (currentFloor == null || currentFloor.Count == 0)
-            return null;
+        int clampedMin = Mathf.Max(1, Mathf.Min(minNodesPerFloor, maxNodesPerFloor));
+        int clampedMax = Mathf.Max(clampedMin, maxNodesPerFloor);
 
-        if (currentFloor.Count == 1)
-            return currentFloor[0];
-
-        int targetIndex = nextCount > 1
-            ? Mathf.RoundToInt((float)nextIndex / (nextCount - 1) * (currentFloor.Count - 1))
-            : currentFloor.Count / 2;
-
-        var candidates = new List<MapNodeData>();
-        for (int offset = -1; offset <= 1; offset++)
+        if (floor <= 0 || mapFloors.Count == 0)
         {
-            int candidateIndex = Mathf.Clamp(targetIndex + offset, 0, currentFloor.Count - 1);
-            MapNodeData candidate = currentFloor[candidateIndex];
-            if (!candidates.Contains(candidate))
-            {
-                candidates.Add(candidate);
-            }
+            return UnityEngine.Random.Range(clampedMin, clampedMax + 1);
         }
 
-        ShuffleList(candidates);
-        foreach (MapNodeData candidate in candidates)
+        int previousCount = mapFloors[mapFloors.Count - 1].Count;
+        int smoothMin = Mathf.Max(clampedMin, previousCount - 1);
+        int smoothMax = Mathf.Min(clampedMax, previousCount + 1);
+
+        if (smoothMin > smoothMax)
         {
-            if (!outgoingConnections.TryGetValue(candidate, out int count) || count < 2)
-                return candidate;
+            smoothMin = clampedMin;
+            smoothMax = clampedMax;
         }
 
-        foreach (MapNodeData node in currentFloor)
-        {
-            if (!outgoingConnections.TryGetValue(node, out int count) || count < 2)
-                return node;
-        }
-
-        return null;
+        return UnityEngine.Random.Range(smoothMin, smoothMax + 1);
     }
     
     // 決定這一層要生成什麼類型的節點
