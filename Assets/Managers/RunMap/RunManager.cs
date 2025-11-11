@@ -477,13 +477,38 @@ public class RunManager : MonoBehaviour
         // 從一個 Player 抓下來一份快照
         public static PlayerRunSnapshot Capture(Player source)
         {
+            if (source == null)
+                return new PlayerRunSnapshot
+                {
+                    deck = new List<CardBase>(),
+                    relics = new List<CardBase>()
+                };
+
+            var combinedDeck = new List<CardBase>();
+
+            if (source.deck != null && source.deck.Count > 0)
+            {
+                combinedDeck.AddRange(source.deck.Where(card => card != null));
+            }
+
+            var hand = source.Hand;
+            if (hand != null && hand.Count > 0)
+            {
+                combinedDeck.AddRange(hand.Where(card => card != null));
+            }
+
+            if (source.discardPile != null && source.discardPile.Count > 0)
+            {
+                combinedDeck.AddRange(source.discardPile.Where(card => card != null));
+            }
+
             return new PlayerRunSnapshot
             {
-                maxHP = source != null ? source.maxHP : 0,
-                currentHP = source != null ? source.currentHP : 0,
-                gold = source != null ? source.gold : 0,
-                deck = source != null && source.deck != null ? new List<CardBase>(source.deck) : new List<CardBase>(),
-                relics = source != null && source.relics != null ? new List<CardBase>(source.relics) : new List<CardBase>()
+                maxHP = source.maxHP,
+                currentHP = source.currentHP,
+                gold = source.gold,
+                deck = combinedDeck,
+                relics = source.relics != null ? new List<CardBase>(source.relics.Where(card => card != null)) : new List<CardBase>()
             };
         }
 

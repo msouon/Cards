@@ -30,20 +30,14 @@ public class RunMapUI : MonoBehaviour
 
     private void Awake()
     {
-        // 如果 Inspector 沒手動指定 RunManager，就嘗試抓單例
-        if (runManager == null)
-        {
-            runManager = RunManager.Instance;
-        }
+        // 每次進場都直接抓當前的單例，避免殘留舊場景引用
+        runManager = RunManager.Instance;
     }
 
     private void OnEnable()
     {
-        // 再保險一次，OnEnable 時也抓 RunManager
-        if (runManager == null)
-        {
-            runManager = RunManager.Instance;
-        }
+        // 再保險一次，OnEnable 時也抓 RunManager（避免引用到被銷毀的場景內物件）
+        runManager = RunManager.Instance;
 
         if (runManager != null)
         {
