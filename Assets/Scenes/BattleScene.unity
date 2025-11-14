@@ -8057,12 +8057,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 100
   currentHP: 0
-  maxEnergy: 10
-  energy: 10
-  block: 4
+  maxEnergy: 3
+  energy: 3
+  block: 0
   gold: 0
   baseHandCardCount: 4
-  deck: []
+  deck:
+  - {fileID: 11400000, guid: 9d0d809868f7c4c4c8e38ffad7b36899, type: 2}
+  - {fileID: 11400000, guid: feba486c5bd8d53448c1a549d4e83245, type: 2}
+  - {fileID: 11400000, guid: be5ac3e72ed43204385448b0880494ae, type: 2}
+  - {fileID: 11400000, guid: fe3d1d20386028d4c99ac6c885f1b27e, type: 2}
+  - {fileID: 11400000, guid: 9b35b87c81d6f2147a95c1bca48d0f77, type: 2}
+  - {fileID: 11400000, guid: 6eadd55c1ec341341a4ff6210583bfe0, type: 2}
   relics: []
   hasDiscardedThisTurn: 0
   discardCountThisTurn: 0

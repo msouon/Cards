@@ -5,31 +5,34 @@ using UnityEngine;
 #region 5 �ؿ�
 
 /// <summary>
-/// ���j��² - ��P����o���, �@����2�i�H�W�ɦA��1
+/// 輪迴主劍 - 當玩家丟棄手牌時，每張牌可獲得1點格擋；
+/// 若一次丟棄達2張或以上，則額外抽1張牌。
 /// </summary>
-[CreateAssetMenu(fileName = "Relic_LunHuiZhuJian", menuName = "Cards/Relic/���j��²")]
-public class Relic_LunHuiZhuJian : CardBase
+[CreateAssetMenu(fileName = "Relic_LunHuiZhuJian", menuName = "Cards/Relic/輪迴主劍")]
+public class Relic_LunHuiZhuJian : CardBase   // 此類別繼承自 CardBase，屬於「遺物」類卡牌
 {
-    public int blockPerDiscard = 1;
-    public int extraDraw = 1;
+    public int blockPerDiscard = 1;   // 每棄一張牌獲得的格擋值（可在 Inspector 調整）
+    public int extraDraw = 1;         // 若達條件（一次丟棄≥2），則額外抽幾張牌（預設為1）
 
     private void OnEnable()
     {
-        cardType = CardType.Relic;
+        cardType = CardType.Relic;    // 啟用時設定此卡牌類型為遺物（Relic）
     }
 
     public override void ExecuteEffect(Player player, Enemy enemy)
     {
-        // ���|�D�ʳQ���X
+        // 遺物卡不在戰鬥中主動使用，因此這裡不執行任何效果
     }
 
+    // 當玩家丟棄手牌時由 Player 觸發
     public void OnPlayerDiscard(Player player, int discardCount)
     {
-        int totalBlock = discardCount * blockPerDiscard;
-        player.AddBlock(totalBlock);
-        if (discardCount >= 2)
+        int totalBlock = discardCount * blockPerDiscard;   // 計算總格擋量（每棄一張牌增加對應格擋）
+        player.AddBlock(totalBlock);                       // 為玩家增加格擋
+
+        if (discardCount >= 2)                             // 若一次丟棄2張或以上
         {
-            player.DrawCards(extraDraw);
+            player.DrawCards(extraDraw);                   // 觸發額外抽牌效果
         }
     }
 }

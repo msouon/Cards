@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcc15adaa35118847b8fe824f80a1818, type: 3}
   m_Name: Skill_HuWoZhenShen
   m_EditorClassIdentifier: 
-  cardName: "\u8B77\u7532"
+  cardName: "\u8B77\u6211\u771F\u8EAB"
   cost: 1
-  description: 
+  description: "\u589E\u52A08\u9EDE\u8B77\u7532"
   cardImage: {fileID: 0}
+  exhaustOnUse: 0
   cardType: 1
   blockValue: 8
-  nextAttackBoost: 2

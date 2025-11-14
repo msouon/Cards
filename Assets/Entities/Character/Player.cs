@@ -20,7 +20,12 @@ public class Player : MonoBehaviour
     [Header("牌堆管理")]
     public List<CardBase> deck = new List<CardBase>();      // 牌庫
     private List<CardBase> hand = new List<CardBase>();     // 手牌（私有，請透過 Hand 取用）
+
     [System.NonSerialized] public List<CardBase> discardPile = new List<CardBase>(); // 棄牌堆（不序列化）
+
+    [System.NonSerialized] public List<CardBase> exhaustPile = new List<CardBase>(); // 消耗牌堆（不序列化）
+     
+    private readonly Dictionary<CardBase, int> cardCostModifiers = new Dictionary<CardBase, int>();
 
     public List<CardBase> relics = new List<CardBase>();  // 遺物 / 聖物清單
 
@@ -272,7 +277,7 @@ public class Player : MonoBehaviour
 
         buffs.RemoveEnemyNegativeEffects(this);
     }
-    
+
     /// <summary>
     /// 抽 n 張牌
     /// </summary>
@@ -283,7 +288,7 @@ public class Player : MonoBehaviour
             Debug.Log("DrawCards skipped: drawing is blocked for the rest of this turn.");
             return;
         }
-        
+
         for (int i = 0; i < n; i++)
         {
             if (deck.Count == 0)
@@ -298,6 +303,76 @@ public class Player : MonoBehaviour
             hand.Add(top);
         }
         FindObjectOfType<BattleManager>()?.RefreshHandUI(true);
+    }
+
+     /// <summary>
+    /// 取得指定卡片的費用修正。
+    /// </summary>
+    public int GetCardCostModifier(CardBase card)
+    {
+        if (card == null)
+        {
+            return 0;
+        }
+
+        return cardCostModifiers.TryGetValue(card, out int modifier) ? modifier : 0;
+    }
+
+    /// <summary>
+    /// 調整指定卡片的費用修正（正值增加、負值降低）。
+    /// </summary>
+    public void AddCardCostModifier(CardBase card, int modifier)
+    {
+        if (card == null || modifier == 0)
+        {
+            return;
+        }
+
+        if (cardCostModifiers.TryGetValue(card, out int current))
+        {
+            int updated = current + modifier;
+            if (updated != 0)
+            {
+                cardCostModifiers[card] = updated;
+            }
+            else
+            {
+                cardCostModifiers.Remove(card);
+            }
+        }
+        else
+        {
+            cardCostModifiers[card] = modifier;
+        }
+    }
+
+    /// <summary>
+    /// 清除指定卡片的費用修正。
+    /// </summary>
+    public void ClearCardCostModifier(CardBase card)
+    {
+        if (card == null)
+        {
+            return;
+        }
+
+        cardCostModifiers.Remove(card);
+    }
+
+    /// <summary>
+    /// 將指定卡片移入消耗牌堆。
+    /// </summary>
+    public void ExhaustCard(CardBase card)
+    {
+        if (card == null)
+        {
+            return;
+        }
+
+        if (!exhaustPile.Contains(card))
+        {
+            exhaustPile.Add(card);
+        }
     }
 
     /// <summary>
@@ -376,6 +451,7 @@ public class Player : MonoBehaviour
             int index = randomIndex ? Random.Range(0, hand.Count) : hand.Count - 1;
             removedCard = hand[index];
             hand.RemoveAt(index);
+            ClearCardCostModifier(removedCard);
             return true;
         }
 
@@ -395,6 +471,7 @@ public class Player : MonoBehaviour
             int selectedIndex = candidateIndexes[Random.Range(0, candidateIndexes.Count)];
             removedCard = hand[selectedIndex];
             hand.RemoveAt(selectedIndex);
+            ClearCardCostModifier(removedCard);
             return true;
         }
 
@@ -405,6 +482,7 @@ public class Player : MonoBehaviour
             {
                 removedCard = candidate;
                 hand.RemoveAt(i);
+                ClearCardCostModifier(removedCard);
                 return true;
             }
         }
@@ -473,6 +551,32 @@ public class Player : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// 隨機棄 1 張牌（優先排除保留的移動卡）
+    /// </summary>
+    public bool DiscardRandomCard()
+    {
+        BattleManager manager = FindObjectOfType<BattleManager>();
+        if (!TryRemoveDiscardableCardFromHand(manager, true, out CardBase c))
+        {
+            return false;
+        }
+
+        discardPile.Add(c);
+        hasDiscardedThisTurn = true;
+        discardCountThisTurn++;
+
+        foreach (CardBase r in relics)
+        {
+            if (r is Relic_LunHuiZhuJian zhujian)
+            {
+                zhujian.OnPlayerDiscard(this, 1);
+            }
+        }
+
+        return true;
+    }
+    
     /// <summary>
     /// 查詢本回合是否有棄牌（供其他效果判斷）
     /// </summary>

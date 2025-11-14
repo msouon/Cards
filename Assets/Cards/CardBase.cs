@@ -12,6 +12,10 @@ public abstract class CardBase : ScriptableObject
     public int cost;                // 打出此卡需要消耗的費用
     [TextArea] public string description;   // 卡片的中文敘述
     public Sprite cardImage;        // 卡面的主視覺圖片
+    
+    [Tooltip("若勾選，使用後將此卡移出戰鬥 (消耗)")]
+    public bool exhaustOnUse = false; // 使用後是否移出戰鬥
+
 
 
     [Header("分類")]

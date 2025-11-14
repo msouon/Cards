@@ -455,17 +455,16 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         if (!player.Hand.Contains(cardData)) return false;
 
         // 計算最終費用 (包含 Buff 修改)
-        int finalCost = cardData.cost;
+        int finalCost = cardData.cost + player.GetCardCostModifier(cardData);
         if (cardData.cardType == CardType.Attack && player.buffs.nextAttackCostModify != 0)
         {
             finalCost += player.buffs.nextAttackCostModify;
-            finalCost = Mathf.Max(0, finalCost);
         }
         if (cardData.cardType == CardType.Movement && player.buffs.movementCostModify != 0)
         {
             finalCost += player.buffs.movementCostModify;
-            finalCost = Mathf.Max(0, finalCost);
         }
+        finalCost = Mathf.Max(0, finalCost);
 
         if (player.energy < finalCost)                     // 能量不足時拒絕
         {
@@ -487,12 +486,23 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
         bool isGuaranteedMovement = IsGuaranteedMovementCard(cardData);
         bool removedFromHand = player.Hand.Remove(cardData);
 
-        if (removedFromHand && !isGuaranteedMovement)
+        if (removedFromHand)
         {
-            player.discardPile.Add(cardData);
+            player.ClearCardCostModifier(cardData);
+            if (isGuaranteedMovement)
+            {
+                RemoveGuaranteedMovementCardFromPiles();
+            }
+            else if (cardData.exhaustOnUse)
+            {
+                player.ExhaustCard(cardData);
+            }
+            else
+            {
+                player.discardPile.Add(cardData);
+            }
         }
-
-        if (isGuaranteedMovement)
+        else if (isGuaranteedMovement)
         {
             RemoveGuaranteedMovementCardFromPiles();
         }
@@ -526,7 +536,11 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
             Debug.Log("Cannot use movement: movement is currently restricted.");
             return;
         }
-        if (player.energy < movementCard.cost)             // 能量檢查
+        int previewCost = movementCard.cost + player.GetCardCostModifier(movementCard);
+        previewCost += player.buffs.movementCostModify;
+        previewCost = Mathf.Max(0, previewCost);
+
+        if (player.energy < previewCost)             // 能量檢查
         {
             Debug.Log("Not enough energy for movement");
             return;
@@ -624,7 +638,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
         currentMovementCard.ExecuteOnPosition(player, tile.gridPosition);  // 執行移動卡效果
 
-        int finalCost = currentMovementCard.cost + player.buffs.movementCostModify;
+        int finalCost = currentMovementCard.cost + player.GetCardCostModifier(currentMovementCard) + player.buffs.movementCostModify;
         finalCost = Mathf.Max(0, finalCost);
         player.UseEnergy(finalCost);                      // 扣除能量
 
@@ -720,7 +734,7 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
     /// </summary>
     public void StartAttackSelect(CardBase attackCard)
     {
-        int finalCost = attackCard.cost + player.buffs.nextAttackCostModify;
+        int finalCost = attackCard.cost + player.GetCardCostModifier(attackCard) + player.buffs.nextAttackCostModify;
         finalCost = Mathf.Max(0, finalCost);
         if (player.energy < finalCost)
         {
@@ -756,12 +770,23 @@ public class BattleManager : MonoBehaviour               // 戰鬥流程管理�
 
         currentAttackCard.ExecuteEffect(player, e);       // 執行攻擊卡效果
 
-        // 棄掉已使用的攻擊卡
-        player.Hand.Remove(currentAttackCard);
-        player.discardPile.Add(currentAttackCard);
-
-        int finalCost = currentAttackCard.cost + player.buffs.nextAttackCostModify;
+        int finalCost = currentAttackCard.cost + player.GetCardCostModifier(currentAttackCard) + player.buffs.nextAttackCostModify;
         finalCost = Mathf.Max(0, finalCost);
+
+        // 棄掉已使用的攻擊卡
+        if (player.Hand.Remove(currentAttackCard))
+        {
+            player.ClearCardCostModifier(currentAttackCard);
+        }
+
+        if (currentAttackCard.exhaustOnUse)
+        {
+            player.ExhaustCard(currentAttackCard);
+        }
+        else
+        {
+            player.discardPile.Add(currentAttackCard);
+        }
         player.UseEnergy(finalCost);                      // 扣除能量
 
         EndAttackSelect();                                // 結束攻擊選擇
