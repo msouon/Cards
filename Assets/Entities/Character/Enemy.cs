@@ -220,7 +220,7 @@ public class Enemy : MonoBehaviour              // 敵人角色，繼承自 Mono
         }
     }
 
-    private void UpdateSpriteSortingOrder()
+    protected void UpdateSpriteSortingOrder()
     {
         EnsureSortingComponents();
 

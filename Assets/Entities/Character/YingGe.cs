@@ -45,7 +45,7 @@ public class YingGe : Enemy
     private bool stoneRespawnCompleted = false;   // 復活石是否已經撐完時間通知可以復活
 
     // ====== 石羽雨相關 ======
-    private int stoneFeatherCooldownTimer = 0;    // 石羽雨當前冷卻倒數
+    private int stoneFeatherCooldownTimer = 0;    // 石羽雨已累積的回合數
     private bool stoneFeatherPending = false;     // 是否目前處於「已經預告，等下一拍真正打下去」的狀態
 
     private Vector2Int storedGridBeforeHide;      // Boss 在隱藏前原本站的格子位置（之後要回來用）
@@ -106,7 +106,7 @@ public class YingGe : Enemy
         }
 
         // 如果冷卻到了、玩家存在，而且這回合成功啟動石羽雨，就結束行動
-        if (player != null && stoneFeatherCooldownTimer <= 0 && TryActivateStoneFeather(player))
+        if (player != null && stoneFeatherCooldownTimer >= stoneFeatherCooldown && TryActivateStoneFeather(player))
         {
             GainEndOfTurnArmor();        // 啟動完也加護甲
             return;
@@ -168,14 +168,14 @@ public class YingGe : Enemy
     // 石羽雨的冷卻回合往前推進
     private void AdvanceStoneFeatherCooldown()
     {
-        if (stoneFeatherPending)         // 如果已經在「等待落下」的狀態，就先不要倒數
+        if (stoneFeatherPending)         // 如果已經在「等待落下」的狀態，就先不要累積
         {
             return;
         }
 
-        if (stoneFeatherCooldownTimer > 0)   // 還在冷卻中
+        if (stoneFeatherCooldownTimer < stoneFeatherCooldown)   // 還在累積回合
         {
-            stoneFeatherCooldownTimer--;     // 倒數一回合
+            stoneFeatherCooldownTimer++;     // 增加一回合累積
         }
     }
 
@@ -209,8 +209,8 @@ public class YingGe : Enemy
 
         // 開始進入「石羽雨準備中」狀態，下一回合會真的打下去
         stoneFeatherPending = true;
-        // 重設冷卻時間
-        stoneFeatherCooldownTimer = Mathf.Max(0, stoneFeatherCooldown);
+        // 重設累積時間
+        stoneFeatherCooldownTimer = 0;
 
         // 記錄隱藏前的位置，之後要回來
         storedGridBeforeHide = gridPosition;

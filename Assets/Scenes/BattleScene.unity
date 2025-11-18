@@ -6546,9 +6546,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 1848671827}
   cardPrefab: {fileID: 4596475076482105628, guid: 100c1a32f1664694b821ff0756181848, type: 3}
-  enemySpawnConfigs:
-  - enemyPrefab: {fileID: 4591814044274373110, guid: e0d91408b43bec24ab02b0d2932a3dfc, type: 3}
-    count: 10
+  enemySpawnConfigs: []
   playerStartPos: {x: 0, y: 0}
   handPanel: {fileID: 5627973}
   deckPile: {fileID: 1721566109}
